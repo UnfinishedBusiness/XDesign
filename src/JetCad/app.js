@@ -12,6 +12,8 @@ let fonts;
 let jetcad = new JetCad();
 let jetcad_tools = new JetCad_Tools();
 
+const Workbench = "JetCad";
+
 function NewDrawing()
 {
 	var drawing = prompt("Drawing Name?", "New Drawing");
@@ -227,9 +229,47 @@ function test_serial()
 	  });
 	});
 }
+function CreateMenu()
+{
+	const {remote} = require('electron');
+  const {Menu, MenuItem} = remote;
+
+  const menu = new Menu();
+  menu.append(new MenuItem ({
+    label: 'File',
+		submenu: [
+			{ label: 'New',
+			click: function() {
+				NewDrawing();
+			}},
+			{ label: 'Open',
+			click: function() {
+				OpenDrawing();
+			}},
+			{ label: 'Save'
+
+			},
+			{ label: 'Save As',
+			click: function() {
+				SaveDrawingAs();
+			}},
+			{ label: 'Debug',
+			click: function() {
+				require('electron').remote.getCurrentWindow().toggleDevTools();
+			}},
+			{ label: 'Reload',
+			click: function() {
+				require('electron').remote.getCurrentWindow().reload();
+			}}
+		]
+ }));
+ appendWorkbenchMenu(menu);
+	Menu.setApplicationMenu(menu);
+}
 
 function main()
 {
+	CreateMenu();
 	DrawMode();
 }
 $( document ).ready(function() {

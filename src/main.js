@@ -21,73 +21,9 @@ function createWindow () {
   mainWindow.maximize();
 
   // and load the index.html of the app.
-  mainWindow.loadFile('./layout/JetCad.html')
+  mainWindow.loadFile('../layout/JetCad/JetCad.html')
 
-  const template = [
-    {
-        label: 'File',
-        submenu: [
-          { label: 'New',
-          click: function() {
-            mainWindow.webContents.executeJavaScript('NewDrawing();');
-          }},
-          { label: 'Open',
-          click: function() {
-            mainWindow.webContents.executeJavaScript('OpenDrawing();');
-          }},
-          { label: 'Save'
-
-          },
-          { label: 'Save As',
-          click: function() {
-            mainWindow.webContents.executeJavaScript('SaveDrawingAs();');
-          }},
-          { label: 'Debug',
-          click: function() {
-            mainWindow.toggleDevTools();
-          }},
-          { label: 'Reload',
-          click: function() {
-            mainWindow.reload();
-          }}
-        ]
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        {
-          role: 'undo'
-        },
-        {
-          role: 'redo'
-        },
-        {
-          type: 'separator'
-        },
-        {
-          role: 'cut'
-        },
-        {
-          role: 'copy'
-        },
-        {
-          role: 'paste'
-        },
-        {
-          role: 'pasteandmatchstyle'
-        },
-        {
-          role: 'delete'
-        },
-        {
-          role: 'selectall'
-        }
-      ]
-    }
-   ]
-
-  //mainWindow.setMenu(Menu.buildFromTemplate(template))
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  Menu.setApplicationMenu(null);
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()

@@ -4,7 +4,7 @@
   "description": "XDesign",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron ./src/main.js"
   },
   "repository": "https://github.com/UnfinishedBusiness/XDesign",
   "keywords": [
