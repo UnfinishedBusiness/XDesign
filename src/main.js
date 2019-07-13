@@ -19,9 +19,9 @@ function createWindow () {
   app.setName("XDesign");
   mainWindow.setTitle("XDesign");
   mainWindow.maximize();
-
+  mainWindow.toggleDevTools();
   // and load the index.html of the app.
-  mainWindow.loadFile('../layout/JetCad/JetCad.html')
+  mainWindow.loadFile('../layout/ncPilot/ncPilot.html')
 
   Menu.setApplicationMenu(null);
 

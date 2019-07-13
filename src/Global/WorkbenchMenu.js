@@ -7,15 +7,15 @@ function appendWorkbenchMenu(menu)
 		submenu: [
 			{ label: 'JetCad',
 			click: function() {
-				NewDrawing();
+				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad/JetCad.html');
 			}},
 			{ label: 'JetCam',
 			click: function() {
-				OpenDrawing();
+				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad/JetCam.html');
 			}},
 			{ label: 'ncPilot',
 			click: function() {
-				SaveDrawingAs();
+				require('electron').remote.getCurrentWindow().loadFile('../layout/ncPilot/ncPilot.html');
 			}}
 		]
  }));

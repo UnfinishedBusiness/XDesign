@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <link rel="stylesheet" href="css/ncPilot.css">
+  <head>
+    <meta charset="UTF-8">
+    <title>ncPilot</title>
+    <script src="../../src/Global/WorkbenchMenu.js"></script>
+    <script src="../../src/ncPilot/app.js"></script>
+
+
+  </head>
+  <body>
+    <section id="X_WCS_Label">X</section>
+    <section id="Y_WCS_Label">Y</section>
+    <section id="X_MCS_Label">ABS</section>
+    <section id="Y_MCS_Label">ABS</section>
+    <section id="X_MCS_POS"></section>
+    <section id="Y_MCS_POS"></section>
+    <section id="X_WCS_POS"></section>
+    <section id="Y_WCS_POS"></section>
+  </body>
+
+  <script>
+  $("#X_WCS_Label").css({ 'position': 'fixed' }).css({right: 300, top: 50}).css({ 'font-size': 40 });
+  $("#Y_WCS_Label").css({ 'position': 'fixed' }).css({right: 300, top: 100}).css({ 'font-size': 40 });
+  </script>
+</html>
