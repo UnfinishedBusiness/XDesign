@@ -1,4 +1,7 @@
 const electron = require('electron');
+const SerialPort = require('serialport');
+const Readline = require('@serialport/parser-readline');
+var MotionControlPort;
 var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
@@ -193,6 +196,37 @@ function Browse()
 
 }
 
+function test_serial()
+{
+	var util = require("util"), repl = require("repl");
+
+	SerialPort.list(function (err, ports) {
+	  ports.forEach(function(port) {
+	    console.log(port.comName);
+	    console.log(port.pnpId);
+	    console.log(port.manufacturer);
+			if (port.comName == "COM3")
+			{
+				MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
+				MotionControlPort.open(function (err) {
+				  if (err) {
+				    return console.log('Error opening port: ', err.message)
+				  }
+				  // Because there's no callback to write, write errors will be emitted on the port:
+									// Switches the port into "flowing mode"
+					var parser = MotionControlPort.pipe(new Readline({ delimiter: '\n' }));
+					parser.on('data', data =>{
+					  console.log('MotionControlPort(read): ', data);
+					});
+				});
+				// The open event is always emitted
+				MotionControlPort.on('open', function() {
+				  // open logic
+				});
+			}
+	  });
+	});
+}
 
 function main()
 {
