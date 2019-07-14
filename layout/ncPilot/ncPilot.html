@@ -20,9 +20,23 @@
       <section id="X_WCS_POS">0.0000</section>
       <section id="Y_WCS_POS">0.0000</section>
       <section id="FEED_Label">FEED</section>
+      <section id="FEED_Value">0.00</section>
       <section id="VEL_Label">VEL</section>
+      <section id="VEL_Value">0.00</section>
       <section id="STATUS_Label">STATUS</section>
+      <section id="STATUS_Value">STOP</section>
       <section id="UNITS_Label">UNITS</section>
+      <section id="UNITS_Value">Inch</section>
+      <section id="FEEDRATE_Percentage">100%</section>
+      <input type="range" min="1" max="100" value="100" class="slider" id="FEEDRATE_Slider">
+      <input id="X_Set" class="button" type="button" value="X=0"/>
+      <input id="Y_Set" class="button" type="button" value="Y=0"/>
+      <input id="Z_Probe" class="button" type="button" value="Z Probe"/>
+      <input id="GoHome" class="button" type="button" value="Go Home"/>
+      <input id="Start" class="button" type="button" value="Start"/>
+      <input id="Hold" class="button" type="button" value="Hold"/>
+      <input id="Abort" class="button" type="button" value="Abort"/>
+      <input id="Open" class="button" type="button" value="Open"/>
     </div>
   </body>
 
@@ -36,8 +50,23 @@
   $("#Y_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 30});
   $("#X_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 90});
   $("#FEED_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 290, top: 140});
+  $("#FEED_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 270, top: 140});
   $("#VEL_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 220, top: 140});
-  $("#STATUS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 160, top: 140});
+  $("#VEL_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 200, top: 140});
+  $("#STATUS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 140, top: 140});
+  $("#STATUS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 110, top: 140});
+  $("#UNITS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 60, top: 140});
+  $("#UNITS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 40, top: 140});
   $("#DRO_Border").css({ 'border': '2px solid black' }).css({ 'width': 300 }).css({ 'height': 130 }).css({ 'position': 'fixed' }).css({right: 10, top: 10}).css({ 'padding': '5px 5px 5px 5px' });
+  $("#FEEDRATE_Percentage").css({ 'position': 'fixed' }).css({right: 15, top: 180});
+  $("#FEEDRATE_Slider").css({ 'position': 'fixed' }).css({ 'width': 300 }).css({right: 15, top: 200});
+  $("#X_Set").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 270, top: 240});
+  $("#Y_Set").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 210, top: 240});
+  $("#Z_Probe").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 130, top: 240});
+  $("#GoHome").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 50, top: 240});
+  $("#Start").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 270, top: 300});
+  $("#Hold").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 210, top: 300});
+  $("#Abort").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 130, top: 300});
+  $("#Open").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 50, top: 300});
   </script>
 </html>
