@@ -10,18 +10,27 @@
 
   </head>
   <body>
-    <section id="X_WCS_Label">X</section>
-    <section id="Y_WCS_Label">Y</section>
-    <section id="X_MCS_Label">ABS</section>
-    <section id="Y_MCS_Label">ABS</section>
-    <section id="X_MCS_POS"></section>
-    <section id="Y_MCS_POS"></section>
-    <section id="X_WCS_POS"></section>
-    <section id="Y_WCS_POS"></section>
+    <div id="DRO_Border">
+      <section id="X_WCS_Label">X</section>
+      <section id="X_MCS_Label">ABS</section>
+      <section id="Y_WCS_Label">Y</section>
+      <section id="Y_MCS_Label">ABS</section>
+      <section id="X_MCS_POS">0.0000</section>
+      <section id="Y_MCS_POS">0.0000</section>
+      <section id="X_WCS_POS">0.0000</section>
+      <section id="Y_WCS_POS">0.0000</section>
+    </div>
   </body>
 
   <script>
-  $("#X_WCS_Label").css({ 'position': 'fixed' }).css({right: 300, top: 50}).css({ 'font-size': 40 });
-  $("#Y_WCS_Label").css({ 'position': 'fixed' }).css({right: 300, top: 100}).css({ 'font-size': 40 });
+  $("#X_WCS_Label").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 290, top: 10});
+  $("#Y_WCS_Label").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 290, top: 70});
+  $("#X_WCS_POS").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 50, top: 10});
+  $("#Y_WCS_POS").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 50, top: 70});
+  $("#Y_MCS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 260, top: 20});
+  $("#X_MCS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 260, top: 80});
+  $("#Y_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 30});
+  $("#X_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 90});
+  $("#DRO_Border").css({ 'border': '2px solid black' }).css({ 'width': 300 }).css({ 'height': 100 }).css({ 'position': 'fixed' }).css({right: 10, top: 10}).css({ 'padding': '5px 5px 5px 5px' });
   </script>
 </html>

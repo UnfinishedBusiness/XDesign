@@ -21,8 +21,8 @@ function MotionController_Init()
 	    console.log(port.manufacturer);
 			if (port.comName == "COM3")
 			{
-				MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
-				MotionControlPort.open(function (err) {
+					MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
+					MotionControlPort.open(function (err) {
 				  if (err) {
 				    return console.log('Error opening port: ', err.message)
 				  }
