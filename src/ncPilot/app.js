@@ -6,6 +6,8 @@ var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
+var gcodeView = new GcodeView();
+const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
 
@@ -83,11 +85,70 @@ function MotionController_ParseInput(line)
 {
 
 }
+var last_point = { x: 0, y: 0};
+var point = { x: 0, y: 0};
+const Runner = function() {
+    const handlers = {
+        'G0': (params) => {
+            //console.log('G0', params);
+						if (params.X != undefined)
+						{
+							point.x = params.X;
+						}
+						if (params.Y != undefined)
+						{
+							point.y = params.Y;
+						}
+						//Plot a rapid line! - Dashed
+						last_point = { x: point.x, y: point.y };
+        },
+        'G1': (params) => {
+            //console.log('G1', params);
+						if (params.X != undefined)
+						{
+							point.x = params.X;
+						}
+						if (params.Y != undefined)
+						{
+							point.y = params.Y;
+						}
+						//Plot a line! - Solid
+						//console.log("Pushing line: origin> " + last_point.x + ", " + last_point.y + " -> " + " " + point.x + ", " + point.y);
+						gcodeView.Stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y] });
+						last_point = { x: point.x, y: point.y };
+        }
 
+    };
+
+    return new Interpreter({
+        handlers: handlers,
+        defaultHandler: (cmd, params) => {
+        }
+    });
+};
+function OpenGcodeFile()
+{
+	const {dialog} = electron.remote;
+	dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections']
+    }, function (files) {
+        if (files !== undefined) {
+					gcodeView.Stack = [];
+        	files.forEach(function(item, index, arr){
+						console.log("Opening File: " + item);
+						const runner = new Runner();
+						const file = item;
+						// loadFromFile
+						runner.loadFromFile(item, function(err, data) { });
+					});
+        }
+    });
+}
 function main()
 {
 	CreateMenu();
 	MotionController_Init();
+	gcodeView.init();
 }
 $( document ).ready(function() {
     main();

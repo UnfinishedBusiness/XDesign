@@ -4,6 +4,7 @@
   <head>
     <meta charset="UTF-8">
     <title>ncPilot</title>
+    <script src="../../lib/GcodeView.js"></script>
     <script src="../../src/Global/WorkbenchMenu.js"></script>
     <script src="../../src/ncPilot/app.js"></script>
 
@@ -36,8 +37,9 @@
       <input id="Start" class="button" type="button" value="Start"/>
       <input id="Hold" class="button" type="button" value="Hold"/>
       <input id="Abort" class="button" type="button" value="Abort"/>
-      <input id="Open" class="button" type="button" value="Open"/>
+      <input id="Open" class="button" type="button" value="Open" onclick="OpenGcodeFile();"/>
     </div>
+    <div id="Content"></div>
   </body>
 
   <script>
