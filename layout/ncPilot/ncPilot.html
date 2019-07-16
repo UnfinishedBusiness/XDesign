@@ -28,6 +28,12 @@
       <section id="STATUS_Value">STOP</section>
       <section id="UNITS_Label">UNITS</section>
       <section id="UNITS_Value">Inch</section>
+      <section id="ARC_Label">ARC</section>
+      <section id="ARC_Value">0.0V</section>
+      <section id="SET_Label">SET</section>
+      <section id="SET_Value">0.0V</section>
+      <section id="THC_Label">THC</section>
+      <section id="THC_Value">OFF</section>
       <section id="FEEDRATE_Percentage">100%</section>
       <input type="range" min="1" max="100" value="100" class="slider" id="FEEDRATE_Slider">
       <input id="X_Set" class="button" type="button" value="X=0"/>
@@ -57,8 +63,14 @@
   $("#VEL_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 200, top: 140});
   $("#STATUS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 140, top: 140});
   $("#STATUS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 110, top: 140});
+  $("#SET_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 140, top: 130});
+  $("#SET_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 110, top: 130});
+  $("#THC_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 220, top: 130});
+  $("#THC_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 200, top: 130});
   $("#UNITS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 60, top: 140});
   $("#UNITS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 40, top: 140});
+  $("#ARC_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 60, top: 130});
+  $("#ARC_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 40, top: 130});
   $("#DRO_Border").css({ 'border': '2px solid black' }).css({ 'width': 300 }).css({ 'height': 130 }).css({ 'position': 'fixed' }).css({right: 10, top: 10}).css({ 'padding': '5px 5px 5px 5px' });
   $("#FEEDRATE_Percentage").css({ 'position': 'fixed' }).css({right: 15, top: 180});
   $("#FEEDRATE_Slider").css({ 'position': 'fixed' }).css({ 'width': 300 }).css({right: 15, top: 200});
@@ -70,5 +82,6 @@
   $("#Hold").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 210, top: 300});
   $("#Abort").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 130, top: 300});
   $("#Open").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 50, top: 300});
+  $("#Content").css({ 'border': '2px solid black' });
   </script>
 </html>
