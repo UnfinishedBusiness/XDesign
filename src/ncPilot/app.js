@@ -18,10 +18,8 @@ function MotionController_Init()
 
 	SerialPort.list(function (err, ports) {
 	  ports.forEach(function(port) {
-	    console.log(port.comName);
-	    console.log(port.pnpId);
-	    console.log(port.manufacturer);
-			if (port.comName == "COM3")
+			console.log("Port = " + port.comName + " pnpId= " + port.pnpId + " manufacturer= " + port.manufacturer);
+			if (port.comName == "COM12")
 			{
 					MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
 					MotionControlPort.open(function (err) {
@@ -83,7 +81,27 @@ function CreateMenu()
 }
 function MotionController_ParseInput(line)
 {
-
+	//DRO: X_MCS=9.514 Y_MCS=0.000 Z_MCS=0.000 X_WO=0.000 Y_WO=0.000 Z_WO=0.000 FEEDRATE=59.0 VELOCITY=291.3 THC_SET_VOLTAGE=0.00 THC_ARC_VOLTAGE=1099.57 UNITS=MM STATUS=RUN
+	if (line.includes("DRO:"))
+	{
+		var dro_line = line.split("DRO: ")[1];
+		var dro_pairs = dro_line.split(" ");
+		for (var x = 0; x < dro_pairs.length; x++)
+		{
+			var pair = dro_pairs[x].split("=");
+			var key = pair[0];
+			var value = pair[1];
+			//console.log("key=" + pair[0] + " value=" + pair[1]);
+			if (key == "X_MCS")
+			{
+				$("#X_MCS_POS").html(value);
+			}
+			if (key == "Y_MCS")
+			{
+				$("#Y_MCS_POS").html(value);
+			}
+		}
+	}
 }
 var last_point = { x: 0, y: 0};
 var point = { x: 0, y: 0};
