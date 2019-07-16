@@ -13,6 +13,10 @@ function appendWorkbenchMenu(menu)
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCam/JetCam.html');
 			}},
+			{ label: 'ImageScan',
+			click: function() {
+				require('electron').remote.getCurrentWindow().loadFile('../layout/ImageScan/ImageScan.html');
+			}},
 			{ label: 'ncPilot',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/ncPilot/ncPilot.html');
