@@ -11,7 +11,7 @@ function appendWorkbenchMenu(menu)
 			}},
 			{ label: 'JetCam',
 			click: function() {
-				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad/JetCam.html');
+				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCam/JetCam.html');
 			}},
 			{ label: 'ncPilot',
 			click: function() {
