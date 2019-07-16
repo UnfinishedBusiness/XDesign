@@ -17,6 +17,8 @@ var CurrentFile = null;
 
 function NewDrawing()
 {
+		require('electron').remote.getCurrentWindow().setTitle("JetCad");
+		CurrentFile = null;
 		jetcad.DrawingName = null;
 		jetcad.Stack = [];
 		jetcad.init();

@@ -11,7 +11,7 @@
  */
 html,
 body {
-  background-color: rgb(230, 255, 255);
+  background-color: #ECF0F5;
   height: 100%;
   -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -19,6 +19,13 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    overflow: hidden;
+}
+#Content{
+  overflow: hidden;
+}
+#draw{
+  overflow: hidden;
 }
 .layout-boxed html,
 .layout-boxed body {
@@ -28,7 +35,7 @@ body {
   font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 /* Layout */
 .wrapper {
