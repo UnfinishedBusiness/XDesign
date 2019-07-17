@@ -101,6 +101,24 @@ function CreateMenu()
  appendWorkbenchMenu(menu);
 	Menu.setApplicationMenu(menu);
 }
+function MotionController_Checksum(data)
+{
+	var buf = [];
+	var buffer = new Buffer.from(data);
+	for (var i = 0; i < buffer.length; i++)
+	{
+	    buf.push(buffer[i]);
+	}
+	var checksum = 0;
+  var count = buf.length;
+	//console.log("count: " + count);
+  while (count > 0)
+  {
+      checksum ^= buf[--count];
+			//console.log("XOR: " + checksum);
+  }
+	return checksum;
+}
 function MotionController_ParseInput(line)
 {
 	//DRO: X_MCS=9.514 Y_MCS=0.000 Z_MCS=0.000 X_WO=0.000 Y_WO=0.000 Z_WO=0.000 FEEDRATE=59.0 VELOCITY=291.3 THC_SET_VOLTAGE=0.00 THC_ARC_VOLTAGE=1099.57 UNITS=MM STATUS=RUN
