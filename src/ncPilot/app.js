@@ -10,7 +10,9 @@ var gcodeView = new GcodeView();
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
-
+var WorkOffset = { x: 0, y: 0};
+var MachinePosition = { x: 0, y: 0};
+var MotionControllerStack = [];
 
 function MotionController_Init()
 {
@@ -19,7 +21,7 @@ function MotionController_Init()
 	SerialPort.list(function (err, ports) {
 	  ports.forEach(function(port) {
 			console.log("Port = " + port.comName + " pnpId= " + port.pnpId + " manufacturer= " + port.manufacturer);
-			if (port.comName == "COM12")
+			if (port.comName == "/dev/tty.usbmodem58671301")
 			{
 					MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
 					MotionControlPort.open(function (err) {
@@ -41,6 +43,26 @@ function MotionController_Init()
 			}
 	  });
 	});
+}
+function MotionController_Write(buff)
+{
+	MotionControllerStack.push(buff);
+	if (MotionControllerStack.length == 1) //We are the firt command needing pushed, so don't wait for an okay!
+	{
+		MotionController_RecievedOK();
+	}
+}
+function MotionController_RecievedOK()
+{
+	if (MotionControllerStack[0] == undefined) return;
+	console.log("Writing: " + MotionControllerStack[0]);
+	MotionControlPort.write(MotionControllerStack[0]);
+	var tmp = [];
+	for (var x = 1; x < MotionControllerStack.length; x++)
+	{
+		tmp.push(MotionControllerStack.x);
+	}
+	MotionControllerStack = tmp;
 }
 function CreateMenu()
 {
@@ -82,7 +104,11 @@ function CreateMenu()
 function MotionController_ParseInput(line)
 {
 	//DRO: X_MCS=9.514 Y_MCS=0.000 Z_MCS=0.000 X_WO=0.000 Y_WO=0.000 Z_WO=0.000 FEEDRATE=59.0 VELOCITY=291.3 THC_SET_VOLTAGE=0.00 THC_ARC_VOLTAGE=1099.57 UNITS=MM STATUS=RUN
-	if (line.includes("DRO:"))
+	if (line.includes("ok"))
+	{
+		MotionController_RecievedOK();
+	}
+	else if (line.includes("DRO:"))
 	{
 		var dro_line = line.split("DRO: ")[1];
 		var dro_pairs = dro_line.split(" ");
@@ -95,10 +121,48 @@ function MotionController_ParseInput(line)
 			if (key == "X_MCS")
 			{
 				$("#X_MCS_POS").html(value);
+				MachinePosition.x = parseFloat(value);
+				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
 			}
 			if (key == "Y_MCS")
 			{
 				$("#Y_MCS_POS").html(value);
+				MachinePosition.y = parseFloat(value);
+				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+			}
+			if (key == "X_WO")
+			{
+				WorkOffset.x = parseFloat(value);
+				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
+			}
+			if (key == "Y_WO")
+			{
+				WorkOffset.y = parseFloat(value);
+				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+			}
+			if (key == "FEEDRATE")
+			{
+				$("#FEED_Value").html(value);
+			}
+			if (key == "VELOCITY")
+			{
+				$("#VEL_Value").html(value);
+			}
+			if (key == "THC_SET_VOLTAGE")
+			{
+				$("#SET_Value").html(value);
+			}
+			if (key == "THC_ARC_VOLTAGE")
+			{
+				$("#ARC_Value").html(value);
+			}
+			if (key == "UNITS")
+			{
+				$("#UNITS_Value").html(value);
+			}
+			if (key == "STATUS")
+			{
+				$("#STATUS_Value").html(value);
 			}
 		}
 	}
@@ -162,8 +226,42 @@ function OpenGcodeFile()
         }
     });
 }
+function KeyUpHandler(e)
+{
+	//console.log(e);
+	if (e.key == "ArrowUp")
+	{
+		MotionController_Write("M3000 P0 S350 D1\n");
+	}
+	if (e.key == "ArrowDown")
+	{
+		MotionController_Write("M3000 P0 S350 D-1\n");
+	}
+	if (e.key == "ArrowLeft")
+	{
+		MotionController_Write("M3000 P1 S350 D1\n");
+	}
+	if (e.key == "ArrowRight")
+	{
+		MotionController_Write("M3000 P1 S350 D-1\n");
+	}
+}
+function KeyDownHandler(e)
+{
+	console.log(e);
+	if (e.key == "ArrowUp" || e.key == "ArrowDown")
+	{
+		MotionController_Write("M3001 P0\n");
+	}
+	if (e.key == "ArrowLeft" || e.key == "ArrowRight")
+	{
+		MotionController_Write("M3001 P1\n");
+	}
+}
 function main()
 {
+	window.addEventListener('keydown', KeyDownHandler, true);
+	window.addEventListener('keyup', KeyUpHandler, true);
 	CreateMenu();
 	MotionController_Init();
 	gcodeView.init();
