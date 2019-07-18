@@ -7,9 +7,23 @@
     <script src="../../lib/GcodeView.js"></script>
     <script src="../../src/Global/WorkbenchMenu.js"></script>
     <script src="../../src/ncPilot/app.js"></script>
-
-
+    <script src="../../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
   </head>
+  <style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+    }
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+    }
+  </style>
+  <pre id="editor"></pre>
   <body>
     <div id="DRO_Border">
       <section id="X_WCS_Label">X</section>

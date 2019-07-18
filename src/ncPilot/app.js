@@ -6,7 +6,9 @@ var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
+var editor = null;
 var gcodeView = new GcodeView();
+var GcodeLines = [];
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
@@ -14,6 +16,19 @@ var WorkOffset = { x: 0, y: 0};
 var MachinePosition = { x: 0, y: 0};
 var MotionControllerStack = [];
 
+function TextEditor_EditGcode()
+{
+	editor.setValue(GcodeLines.join("\n"));
+	editor.clearSelection();
+	$("#editor").show();
+}
+function TextEditor_Init()
+{
+	editor = ace.edit("editor");
+  editor.setTheme("ace/theme/twilight");
+  editor.session.setMode("ace/mode/gcode");
+	$("#editor").hide();
+}
 function MotionController_Init()
 {
 	var util = require("util"), repl = require("repl");
@@ -238,8 +253,20 @@ function OpenGcodeFile()
 						console.log("Opening File: " + item);
 						const runner = new Runner();
 						const file = item;
+						GcodeLines = [];
 						// loadFromFile
 						runner.loadFromFile(item, function(err, data) { });
+						fs.readFile(item, 'utf-8', (err, data) => {
+							if(err){
+									alert("An error ocurred reading the file :" + err.message);
+									return;
+							}
+							GcodeLines = data.split("\n");
+							for (var x = 0; x < GcodeLines.length; x++)
+							{
+								GcodeLines[x] = GcodeLines[x].replace(/(\r\n\t|\n|\r\t)/gm,"");
+							}
+						});
 					});
         }
     });
@@ -281,6 +308,7 @@ function main()
 	window.addEventListener('keydown', KeyDownHandler, true);
 	window.addEventListener('keyup', KeyUpHandler, true);
 	CreateMenu();
+	TextEditor_Init();
 	MotionController_Init();
 	gcodeView.init();
 }
