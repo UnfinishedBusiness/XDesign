@@ -35,6 +35,9 @@ function TextEditor_EditGcode()
 function TextEditor_SaveGcode()
 {
 	GcodeLines = editor.getValue().split("\n");
+	gcodeView.Stack = [];
+	const runner = new Runner();
+	runner.loadFromString(GcodeLines.join("\n"));
 }
 function TextEditor_Init()
 {
@@ -270,8 +273,6 @@ function OpenGcodeFile()
 						const runner = new Runner();
 						const file = item;
 						GcodeLines = [];
-						// loadFromFile
-						runner.loadFromFile(item, function(err, data) { });
 						fs.readFile(item, 'utf-8', (err, data) => {
 							if(err){
 									alert("An error ocurred reading the file :" + err.message);
@@ -282,6 +283,7 @@ function OpenGcodeFile()
 							{
 								GcodeLines[x] = GcodeLines[x].replace(/(\r\n\t|\n|\r\t)/gm,"");
 							}
+							runner.loadFromString(GcodeLines.join("\n"));
 						});
 					});
         }
