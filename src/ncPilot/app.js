@@ -15,12 +15,26 @@ const Workbench = "ncPilot";
 var WorkOffset = { x: 0, y: 0};
 var MachinePosition = { x: 0, y: 0};
 var MotionControllerStack = [];
+var AltKeyDown = false;
 
+
+function TextEditor_Show()
+{
+	$("#editor").show();
+}
+function TextEditor_Hide()
+{
+	$("#editor").hide();
+}
 function TextEditor_EditGcode()
 {
 	editor.setValue(GcodeLines.join("\n"));
 	editor.clearSelection();
 	$("#editor").show();
+}
+function TextEditor_SaveGcode()
+{
+	GcodeLines = editor.getValue().split("\n");
 }
 function TextEditor_Init()
 {
@@ -274,6 +288,10 @@ function OpenGcodeFile()
 function KeyUpHandler(e)
 {
 	//console.log(e);
+	if (e.jey == "LeftAlt")
+	{
+		AltKeyDown = false;
+	}
 	if (e.key == "ArrowUp")
 	{
 		MotionController_Write("M3000 P0 S350 D1\n");
@@ -294,6 +312,10 @@ function KeyUpHandler(e)
 function KeyDownHandler(e)
 {
 	console.log(e);
+	if (e.key == "Alt")
+	{
+		AltKeyDown = true;
+	}
 	if (e.key == "ArrowUp" || e.key == "ArrowDown")
 	{
 		MotionController_Write("M3001 P0\n");
@@ -301,6 +323,15 @@ function KeyDownHandler(e)
 	if (e.key == "ArrowLeft" || e.key == "ArrowRight")
 	{
 		MotionController_Write("M3001 P1\n");
+	}
+	if (e.key == "Escape")
+	{
+		TextEditor_SaveGcode();
+		TextEditor_Hide();
+	}
+	if (e.key == "F2" && AltKeyDown == true)
+	{
+		TextEditor_EditGcode();
 	}
 }
 function main()
