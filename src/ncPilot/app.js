@@ -2,6 +2,8 @@ const electron = require('electron');
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 var MotionControlPort;
+var MDITerminal;
+var MDILineBuffer;
 var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
@@ -17,7 +19,66 @@ var MachinePosition = { x: 0, y: 0};
 var MotionControllerStack = [];
 var AltKeyDown = false;
 
-
+function MDITerminal_Init()
+{
+	Terminal.applyAddon(fullscreen);
+	MDITerminal = new Terminal({ allowTransparency: true });
+  MDITerminal.open(document.getElementById('terminal'));
+	MDITerminal.toggleFullScreen(true);
+	$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'});
+  MDITerminal.write('MDI> ');
+	MDILineBuffer = "";
+	MDITerminal.on('key', (key, ev) => {
+        //console.log("Keycode: " + key.charCodeAt(0) + " Key: " + key);
+        if (key.charCodeAt(0) == 13)
+				{
+					MDITerminal.write('\n\r');
+					MDITerminal_Eval(MDILineBuffer);
+					MDILineBuffer = "";
+				}
+				else if (key.charCodeAt(0) == 127)
+				{
+					if (MDILineBuffer.length > 0)
+					{
+							MDITerminal.write('\b \b');
+							MDILineBuffer = MDILineBuffer.substring(0, MDILineBuffer.length - 1);
+					}
+				}
+				else if (key.charCodeAt(0) == 3) //control-c
+				{
+					MDITerminal.write('\n\r');
+					MDITerminal_Eval("control-c");
+					MDILineBuffer = "";
+				}
+				else if (key.charCodeAt(0) == 9) //tab
+				{
+					MDITerminal_Eval("tab-complete");
+				}
+				else if (key == "[A") //up arrow
+				{
+					MDITerminal_Eval("up-arrowkey");
+				}
+				else if (key == "[B") //down arrow
+				{
+					MDITerminal_Eval("down-arrowkey");
+				}
+				else
+				{
+					MDITerminal.write(key);
+					MDILineBuffer += key;
+				}
+	});
+	$("#terminal").hide();
+}
+function MDITerminal_Show()
+{
+	$("#terminal").show();
+	MDITerminal.focus();
+}
+function MDITerminal_Hide()
+{
+	$("#terminal").hide();
+}
 function TextEditor_Show()
 {
 	$("#editor").show();
@@ -53,7 +114,7 @@ function MotionController_Init()
 	SerialPort.list(function (err, ports) {
 	  ports.forEach(function(port) {
 			console.log("Port = " + port.comName + " pnpId= " + port.pnpId + " manufacturer= " + port.manufacturer);
-			if (port.comName == "COM12")
+			if (port.comName == machine_parameters.com_port)
 			{
 					MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
 					MotionControlPort.open(function (err) {
@@ -70,7 +131,11 @@ function MotionController_Init()
 				});
 				// The open event is always emitted
 				MotionControlPort.on('open', function() {
-				  MotionController_Write("G20");
+					for (var x = 0; x < machine_parameters.startup_lines.length; x++)
+					{
+						MotionController_Write(machine_parameters.startup_lines[x]);
+					}
+
 				});
 			}
 	  });
@@ -336,10 +401,15 @@ function KeyDownHandler(e)
 	{
 		TextEditor_SaveGcode();
 		TextEditor_Hide();
+		MDITerminal_Hide();
 	}
 	if (e.key == "F2" && AltKeyDown == true)
 	{
 		TextEditor_EditGcode();
+	}
+	if (e.key == "F1" && AltKeyDown == true)
+	{
+		MDITerminal_Show();
 	}
 }
 function main()
@@ -349,6 +419,7 @@ function main()
 	CreateMenu();
 	TextEditor_Init();
 	MotionController_Init();
+	MDITerminal_Init();
 	gcodeView.init();
 }
 $( document ).ready(function() {

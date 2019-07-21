@@ -23,6 +23,7 @@
     "jquery": "^3.4.1",
     "makerjs": "^0.14.0",
     "potrace": "^2.1.2",
-    "serialport": "^7.1.5"
+    "serialport": "^7.1.5",
+    "xterm": "^3.14.5"
   }
 }

@@ -9,6 +9,10 @@ function appendWorkbenchMenu(menu)
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad/JetCad.html');
 			}},
+      { label: 'JetCad3D',
+			click: function() {
+				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad3D/JetCad3D.html');
+			}},
 			{ label: 'JetCam',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCam/JetCam.html');

@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
   <link rel="stylesheet" href="css/ncPilot.css">
+  <link rel="stylesheet" href="../../node_modules/xterm/dist/xterm.css" />
+  <link rel="stylesheet" href="../../node_modules/xterm/dist/addons/fullscreen/fullscreen.css" />
   <head>
     <meta charset="UTF-8">
     <title>ncPilot</title>
     <script src="../../lib/GcodeView.js"></script>
     <script src="../../src/Global/WorkbenchMenu.js"></script>
     <script src="../../src/ncPilot/app.js"></script>
+    <script src="../../src/ncPilot/mdi_commands.js"></script>
+    <script src="../../src/ncPilot/machine_parameters.js"></script>
     <script src="../../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../node_modules/xterm/dist/xterm.js"></script>
+    <script src="../../node_modules/xterm/dist/addons/fullscreen/fullscreen.js"></script>
   </head>
   <style type="text/css" media="screen">
     body {
@@ -23,6 +29,7 @@
         z-index: 10;
     }
   </style>
+  <div id="terminal"></div>
   <pre id="editor"></pre>
   <body>
     <div id="DRO_Border">
