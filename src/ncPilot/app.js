@@ -50,7 +50,7 @@ function MotionController_Init()
 	SerialPort.list(function (err, ports) {
 	  ports.forEach(function(port) {
 			console.log("Port = " + port.comName + " pnpId= " + port.pnpId + " manufacturer= " + port.manufacturer);
-			if (port.comName == "/dev/tty.usbmodem58671301")
+			if (port.comName == "COM12")
 			{
 					MotionControlPort = new SerialPort(port.comName, { autoOpen: false })
 					MotionControlPort.open(function (err) {
@@ -67,7 +67,7 @@ function MotionController_Init()
 				});
 				// The open event is always emitted
 				MotionControlPort.on('open', function() {
-				  // open logic
+				  MotionController_Write("G20");
 				});
 			}
 	  });
@@ -84,8 +84,8 @@ function MotionController_Write(buff)
 function MotionController_RecievedOK()
 {
 	if (MotionControllerStack[0] == undefined) return;
-	console.log("Writing: " + MotionControllerStack[0]);
-	MotionControlPort.write(MotionControllerStack[0]);
+	//console.log("Writing: " + MotionControllerStack[0]);
+	MotionControlPort.write(MotionControllerStack[0] + "\n");
 	var tmp = [];
 	for (var x = 1; x < MotionControllerStack.length; x++)
 	{
@@ -170,12 +170,14 @@ function MotionController_ParseInput(line)
 				$("#X_MCS_POS").html(value);
 				MachinePosition.x = parseFloat(value);
 				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
+				gcodeView.CrossHairPosition.x = parseFloat($("#X_WCS_POS").html());
 			}
 			if (key == "Y_MCS")
 			{
 				$("#Y_MCS_POS").html(value);
 				MachinePosition.y = parseFloat(value);
 				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+				gcodeView.CrossHairPosition.y = parseFloat($("#Y_WCS_POS").html());
 			}
 			if (key == "X_WO")
 			{
@@ -292,37 +294,41 @@ function KeyUpHandler(e)
 	{
 		AltKeyDown = false;
 	}
-	if (e.key == "ArrowUp")
+	if (e.key == "ArrowUp" || e.key == "ArrowDown")
 	{
-		MotionController_Write("M3000 P0 S350 D1\n");
+		MotionController_Write("M3001 P1\n");
 	}
-	if (e.key == "ArrowDown")
+	if (e.key == "ArrowLeft" || e.key == "ArrowRight")
 	{
-		MotionController_Write("M3000 P0 S350 D-1\n");
-	}
-	if (e.key == "ArrowLeft")
-	{
-		MotionController_Write("M3000 P1 S350 D1\n");
-	}
-	if (e.key == "ArrowRight")
-	{
-		MotionController_Write("M3000 P1 S350 D-1\n");
+		MotionController_Write("M3001 P0\n");
 	}
 }
 function KeyDownHandler(e)
 {
-	console.log(e);
+	//console.log(e);
 	if (e.key == "Alt")
 	{
 		AltKeyDown = true;
 	}
-	if (e.key == "ArrowUp" || e.key == "ArrowDown")
+	if (e.jey == "LeftAlt")
 	{
-		MotionController_Write("M3001 P0\n");
+		AltKeyDown = false;
 	}
-	if (e.key == "ArrowLeft" || e.key == "ArrowRight")
+	if (e.key == "ArrowUp")
 	{
-		MotionController_Write("M3001 P1\n");
+		MotionController_Write("M3000 P1 S350 D1\n");
+	}
+	if (e.key == "ArrowDown")
+	{
+		MotionController_Write("M3000 P1 S350 D-1\n");
+	}
+	if (e.key == "ArrowLeft")
+	{
+		MotionController_Write("M3000 P0 S350 D-1\n");
+	}
+	if (e.key == "ArrowRight")
+	{
+		MotionController_Write("M3000 P0 S350 D1\n");
 	}
 	if (e.key == "Escape")
 	{

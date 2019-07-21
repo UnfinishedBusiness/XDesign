@@ -19,16 +19,16 @@ body {
     -ms-user-select: none;
     user-select: none;
     overflow: hidden;
+    background: black;
+    font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: red;
+    font-weight: 400;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 .layout-boxed html,
 .layout-boxed body {
   height: 100%;
-}
-body {
-  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 400;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 .slider {
   -webkit-appearance: none;
@@ -70,5 +70,5 @@ body {
 
 .button:hover {
    background-color: green;
-    color:white;
+   color:white;
 }
