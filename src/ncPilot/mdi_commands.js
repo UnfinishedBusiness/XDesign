@@ -18,6 +18,7 @@ var mdi_commands = [
 	{ description: "Connect to serial port", cmd: "connect", run: function(args){ MotionController_Init(); ret(); } },
 	{ description: "Save machine parameters", cmd: "save_parameters", run: function(args){ save_parameters(); } },
 	{ description: "Display command history", cmd: "history", run: function(args){ history(); } },
+	{ description: "Dump Serial Transmission Log", cmd: "dmesg", run: function(args){ dmesg(); } },
 	{ description: "Display this menu", cmd: "help", run: function(args){ help(); } },
 	{ special: true, cmd: "control-c", run: function(args){ printf("Terminating!\n"); } },
 	{ special: true, cmd: "tab-complete", run: function(args){ tab_complete(args); } },
@@ -153,6 +154,18 @@ function tail(args)
 	}
 	ret();
 }
+function dmesg(args)
+{
+
+	for (var x = 0; x < SerialTransmissionLog.length; x++)
+	{
+		if (!SerialTransmissionLog[x].includes("DRO"))
+		{
+			printf(SerialTransmissionLog[x] + "\n\r");
+		}
+	}
+	ret();
+}
 function eval_command(args)
 {
 	args[0] = "";
@@ -188,6 +201,7 @@ function MDITerminal_Eval(cmd_buffer)
 		MotionController_Write(cmd_buffer);
 		command_history.push(cmd_buffer);
 		command_history_counter = 0;
+		ret();
 	}
 	else
 	{

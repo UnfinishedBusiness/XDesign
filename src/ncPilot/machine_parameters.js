@@ -7,14 +7,9 @@ function MachineParameters_Init()
 {
   if (fs.existsSync("machine_parameters.js"))
   {
-    fs.readFile("machine_parameters.js", 'utf-8', (err, data) => {
-      if(err){
-          alert("An error ocurred reading the file :" + err.message);
-          return;
-      }
-      machine_parameters = JSON.parse(data);
-      gcodeView.MachineExtents = machine_parameters.machine_extents;
-    });
+    var buf = fs.readFileSync("machine_parameters.js", 'utf-8');
+    machine_parameters = JSON.parse(buf);
+    gcodeView.MachineExtents = machine_parameters.machine_extents;
   }
 }
 function MachineParameters_Save()

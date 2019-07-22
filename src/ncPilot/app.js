@@ -11,6 +11,7 @@ let DxfWriter = require('dxf-writer');
 var editor = null;
 var gcodeView = new GcodeView();
 var GcodeLines = [];
+var WaitingForOkay = false;
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
@@ -19,13 +20,22 @@ var MachinePosition = { x: 0, y: 0};
 var MotionControllerStack = [];
 var AltKeyDown = false;
 
+var SerialTransmissionLog = [];
+
 function MDITerminal_Init()
 {
 	Terminal.applyAddon(fullscreen);
-	MDITerminal = new Terminal({ allowTransparency: true });
+	Terminal.applyAddon(webLinks);
+  Terminal.applyAddon(fit);
+	MDITerminal = new Terminal({
+		allowTransparency: true,
+		fontFamily: `'Fira Mono', monospace`,
+    fontSize: 15,
+	});
   MDITerminal.open(document.getElementById('terminal'));
-	MDITerminal.toggleFullScreen(true);
-	$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'});
+	//MDITerminal.toggleFullScreen(true);
+	$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'}).css({'width': "100%"}).css({'height': "100%"});
+	MDITerminal.fit();
   MDITerminal.write(PS1);
 	MDILineBuffer = "";
 	MDITerminal.on('key', (key, ev) => {
@@ -97,13 +107,19 @@ function TextEditor_Hide()
 }
 function TextEditor_EditGcode()
 {
-	editor.setValue(GcodeLines.join("\n"));
-	editor.clearSelection();
 	$("#editor").show();
 }
 function TextEditor_SaveGcode()
 {
-	GcodeLines = editor.getValue().split("\n");
+	var lines = editor.getValue().split("\n");
+	GcodeLines = [];
+	for (var x = 0; x < lines.length; x++)
+	{
+		if (lines[x].length > 2)
+		{
+			GcodeLines.push(lines[x]);
+		}
+	}
 	gcodeView.Stack = [];
 	const runner = new Runner();
 	runner.loadFromString(GcodeLines.join("\n"));
@@ -151,23 +167,33 @@ function MotionController_Init()
 }
 function MotionController_Write(buff)
 {
-	MotionControllerStack.push(buff);
-	if (MotionControllerStack.length == 1) //We are the firt command needing pushed, so don't wait for an okay!
+	if (buff == "")
 	{
-		MotionController_RecievedOK();
+		//console.log("Caught empty line!");
+		return;
+	}
+	if (WaitingForOkay == true)
+	{
+		MotionControllerStack.push(buff);
+	}
+	else
+	{
+		SerialTransmissionLog.push("->" + buff);
+		MotionControlPort.write(buff + "\n");
+		WaitingForOkay = true;
 	}
 }
 function MotionController_RecievedOK()
 {
-	if (MotionControllerStack[0] == undefined) return;
-	//console.log("Writing: " + MotionControllerStack[0]);
-	MotionControlPort.write(MotionControllerStack[0] + "\n");
-	var tmp = [];
-	for (var x = 1; x < MotionControllerStack.length; x++)
+	WaitingForOkay = false;
+	var send_line = MotionControllerStack.shift();
+	if (send_line == "")
 	{
-		tmp.push(MotionControllerStack.x);
+		send_line = MotionControllerStack.shift();
 	}
-	MotionControllerStack = tmp;
+	if (send_line == undefined) return;
+	SerialTransmissionLog.push("->" + send_line);
+	MotionControlPort.write(send_line + "\n");
 }
 function CreateMenu()
 {
@@ -227,6 +253,7 @@ function MotionController_Checksum(data)
 function MotionController_ParseInput(line)
 {
 	//DRO: X_MCS=9.514 Y_MCS=0.000 Z_MCS=0.000 X_WO=0.000 Y_WO=0.000 Z_WO=0.000 FEEDRATE=59.0 VELOCITY=291.3 THC_SET_VOLTAGE=0.00 THC_ARC_VOLTAGE=1099.57 UNITS=MM STATUS=RUN
+	SerialTransmissionLog.push("<-" + line);
 	if (line.includes("ok"))
 	{
 		MotionController_RecievedOK();
@@ -246,23 +273,25 @@ function MotionController_ParseInput(line)
 				$("#X_MCS_POS").html(value);
 				MachinePosition.x = parseFloat(value);
 				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
-				gcodeView.CrossHairPosition.x = parseFloat($("#X_WCS_POS").html());
+				gcodeView.CrossHairPosition.x = parseFloat($("#X_MCS_POS").html());
 			}
 			if (key == "Y_MCS")
 			{
 				$("#Y_MCS_POS").html(value);
 				MachinePosition.y = parseFloat(value);
 				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
-				gcodeView.CrossHairPosition.y = parseFloat($("#Y_WCS_POS").html());
+				gcodeView.CrossHairPosition.y = parseFloat($("#Y_MCS_POS").html());
 			}
 			if (key == "X_WO")
 			{
 				WorkOffset.x = parseFloat(value);
+				gcodeView.WorkOffset.x = WorkOffset.x;
 				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
 			}
 			if (key == "Y_WO")
 			{
 				WorkOffset.y = parseFloat(value);
+				gcodeView.WorkOffset.y = WorkOffset.y;
 				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
 			}
 			if (key == "FEEDRATE")
@@ -354,9 +383,14 @@ function OpenGcodeFile()
 							GcodeLines = data.split("\n");
 							for (var x = 0; x < GcodeLines.length; x++)
 							{
-								GcodeLines[x] = GcodeLines[x].replace(/(\r\n\t|\n|\r\t)/gm,"");
+								if (GcodeLines[x] != "")
+								{
+									GcodeLines[x] = GcodeLines[x].replace(/(\r\n\t|\n|\r\t)/gm,"");
+								}
 							}
 							runner.loadFromString(GcodeLines.join("\n"));
+							editor.setValue(GcodeLines.join("\n"));
+							editor.clearSelection();
 						});
 					});
         }
@@ -419,6 +453,39 @@ function KeyDownHandler(e)
 	{
 		MDITerminal_Show();
 	}
+}
+function SetX_Offset()
+{
+	MotionController_Write("G92 X0");
+}
+function SetY_Offset()
+{
+	MotionController_Write("G92 Y0");
+}
+function Z_Probe()
+{
+	MotionController_Write("M2100 S0");
+}
+function GoHome()
+{
+	MotionController_Write("M2101 P0 R2"); //Retract torch 3 inches and will turn off torch if it's on
+  MotionController_Write("G0 X" + WorkOffset.x + " Y" + WorkOffset.y);
+}
+function ProgramStart()
+{
+	for (var x = 0; x < GcodeLines.length; x++)
+	{
+		console.log("Pushing: " + GcodeLines[x]);
+		MotionController_Write(GcodeLines[x]);
+	}
+}
+function ProgramHold()
+{
+
+}
+function ProgramAbort()
+{
+
 }
 function main()
 {

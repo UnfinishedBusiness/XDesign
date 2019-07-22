@@ -14,6 +14,8 @@
     <script src="../../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="../../node_modules/xterm/dist/xterm.js"></script>
     <script src="../../node_modules/xterm/dist/addons/fullscreen/fullscreen.js"></script>
+    <script src="../../node_modules/xterm/dist/addons/fit/fit.js"></script>
+    <script src="../../node_modules/xterm/dist/addons/webLinks/webLinks.js"></script>
   </head>
   <style type="text/css" media="screen">
     body {
@@ -57,13 +59,13 @@
       <section id="THC_Value">OFF</section>
       <section id="FEEDRATE_Percentage">100%</section>
       <input type="range" min="1" max="100" value="100" class="slider" id="FEEDRATE_Slider">
-      <input id="X_Set" class="button" type="button" value="X=0"/>
-      <input id="Y_Set" class="button" type="button" value="Y=0"/>
-      <input id="Z_Probe" class="button" type="button" value="Z Probe"/>
-      <input id="GoHome" class="button" type="button" value="Go Home"/>
-      <input id="Start" class="button" type="button" value="Start"/>
-      <input id="Hold" class="button" type="button" value="Hold"/>
-      <input id="Abort" class="button" type="button" value="Abort"/>
+      <input id="X_Set" class="button" type="button" value="X=0" onclick="SetX_Offset();"/>
+      <input id="Y_Set" class="button" type="button" value="Y=0" onclick="SetY_Offset();"/>
+      <input id="Z_Probe" class="button" type="button" value="Z Probe" onclick="Z_Probe();"/>
+      <input id="GoHome" class="button" type="button" value="Go Home" onclick="GoHome();"/>
+      <input id="Start" class="button" type="button" value="Start" onclick="ProgramStart();"/>
+      <input id="Hold" class="button" type="button" value="Hold" onclick="ProgramHold();"/>
+      <input id="Abort" class="button" type="button" value="Abort" onclick="ProgramAbort();"/>
       <input id="Open" class="button" type="button" value="Open" onclick="OpenGcodeFile();"/>
     </div>
     <div id="Content"></div>
