@@ -284,15 +284,23 @@ function MotionController_ParseInput(line)
 			}
 			if (key == "X_WO")
 			{
-				WorkOffset.x = parseFloat(value);
-				gcodeView.WorkOffset.x = WorkOffset.x;
-				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
+				if (parseFloat(value) != WorkOffset.x)
+				{
+					WorkOffset.x = parseFloat(value);
+					gcodeView.WorkOffset.x = WorkOffset.x;
+					$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
+					gcodeView.render(true);
+				}
 			}
 			if (key == "Y_WO")
 			{
-				WorkOffset.y = parseFloat(value);
-				gcodeView.WorkOffset.y = WorkOffset.y;
-				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+				if (parseFloat(value) != WorkOffset.y)
+				{
+					WorkOffset.y = parseFloat(value);
+					gcodeView.WorkOffset.y = WorkOffset.y;
+					$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+					gcodeView.render(true);
+				}
 			}
 			if (key == "FEEDRATE")
 			{
@@ -352,6 +360,10 @@ const Runner = function() {
 						//console.log("Pushing line: origin> " + last_point.x + ", " + last_point.y + " -> " + " " + point.x + ", " + point.y);
 						gcodeView.Stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y] });
 						last_point = { x: point.x, y: point.y };
+        },
+				'M30': (params) => {
+            console.log('Rendering Entities!', params);
+							gcodeView.render(true);
         }
 
     };
