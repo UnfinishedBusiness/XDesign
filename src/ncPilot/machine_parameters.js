@@ -14,12 +14,6 @@ function MachineParameters_Init()
 }
 function MachineParameters_Save()
 {
-  fs.writeFile("machine_parameters.js", JSON.stringify(machine_parameters),
-    // callback function that is called after writing file is done
-    function(err) {
-        if (err) throw err;
-        // if no error
-        //console.log("Data is written to file successfully.")
-  });
+  fs.writeFileSync("machine_parameters.js", JSON.stringify(machine_parameters));
   MachineParameters_Init();
 }

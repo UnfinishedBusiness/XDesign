@@ -11,6 +11,7 @@ let DxfWriter = require('dxf-writer');
 var editor = null;
 var gcodeView = new GcodeView();
 var GcodeLines = [];
+var GcodeFileName = "";
 var WaitingForOkay = false;
 const Interpreter = require('gcode-interpreter');
 
@@ -21,6 +22,10 @@ var MotionControllerStack = [];
 var AltKeyDown = false;
 
 var SerialTransmissionLog = [];
+
+var ProgramHoldFlag = false;
+var ProgramUploaded = false;
+var CurrentFocus = "HMI";
 
 function MDITerminal_Init()
 {
@@ -90,24 +95,28 @@ function MDITerminal_Init()
 }
 function MDITerminal_Show()
 {
+	CurrentFocus = "MDI";
 	$("#terminal").show();
 	MDITerminal.focus();
 }
 function MDITerminal_Hide()
 {
+	CurrentFocus = "HMI";
 	$("#terminal").hide();
 }
 function TextEditor_Show()
 {
+	CurrentFocus = "EDIT";
 	$("#editor").show();
 }
 function TextEditor_Hide()
 {
+	CurrentFocus = "HMI";
 	$("#editor").hide();
 }
 function TextEditor_EditGcode()
 {
-	$("#editor").show();
+	TextEditor_Show();
 }
 function TextEditor_SaveGcode()
 {
@@ -123,6 +132,16 @@ function TextEditor_SaveGcode()
 	gcodeView.Stack = [];
 	const runner = new Runner();
 	runner.loadFromString(GcodeLines.join("\n"));
+	if (GcodeFileName != "")
+	{
+		fs.writeFile(GcodeFileName, GcodeLines.join("\n"),
+	    // callback function that is called after writing file is done
+	    function(err) {
+	        if (err) throw err;
+	        // if no error
+	        //console.log("Data is written to file successfully.")
+	  });
+	}
 }
 function TextEditor_Init()
 {
@@ -192,8 +211,15 @@ function MotionController_RecievedOK()
 		send_line = MotionControllerStack.shift();
 	}
 	if (send_line == undefined) return;
-	SerialTransmissionLog.push("->" + send_line);
-	MotionControlPort.write(send_line + "\n");
+	if (ProgramHoldFlag == false)
+	{
+		SerialTransmissionLog.push("->" + send_line);
+		MotionControlPort.write(send_line + "\n");
+		if (send_line.includes("M30"))
+		{
+			ProgramUploaded = false; //We can press start again after the program finishes!
+		}
+	}
 }
 function CreateMenu()
 {
@@ -387,6 +413,7 @@ function OpenGcodeFile()
 						const runner = new Runner();
 						const file = item;
 						GcodeLines = [];
+						GcodeFileName = item;
 						fs.readFile(item, 'utf-8', (err, data) => {
 							if(err){
 									alert("An error ocurred reading the file :" + err.message);
@@ -410,23 +437,24 @@ function OpenGcodeFile()
 }
 function KeyUpHandler(e)
 {
-	//console.log(e);
-	if (e.jey == "LeftAlt")
+	if (CurrentFocus == "HMI")
 	{
-		AltKeyDown = false;
-	}
-	if (e.key == "ArrowUp" || e.key == "ArrowDown")
-	{
-		MotionController_Write("M3001 P1\n");
-	}
-	if (e.key == "ArrowLeft" || e.key == "ArrowRight")
-	{
-		MotionController_Write("M3001 P0\n");
+		if (e.jey == "LeftAlt")
+		{
+			AltKeyDown = false;
+		}
+		if (e.key == "ArrowUp" || e.key == "ArrowDown")
+		{
+			MotionController_Write("M3001 P1\n");
+		}
+		if (e.key == "ArrowLeft" || e.key == "ArrowRight")
+		{
+			MotionController_Write("M3001 P0\n");
+		}
 	}
 }
 function KeyDownHandler(e)
 {
-	//console.log(e);
 	if (e.key == "Alt")
 	{
 		AltKeyDown = true;
@@ -435,27 +463,42 @@ function KeyDownHandler(e)
 	{
 		AltKeyDown = false;
 	}
-	if (e.key == "ArrowUp")
+	if (CurrentFocus == "HMI")
 	{
-		MotionController_Write("M3000 P1 S350 D1\n");
+		//console.log(e);
+		if (e.key == "ArrowUp")
+		{
+			MotionController_Write("M3000 P1 S350 D1\n");
+		}
+		if (e.key == "ArrowDown")
+		{
+			MotionController_Write("M3000 P1 S350 D-1\n");
+		}
+		if (e.key == "ArrowLeft")
+		{
+			MotionController_Write("M3000 P0 S350 D-1\n");
+		}
+		if (e.key == "ArrowRight")
+		{
+			MotionController_Write("M3000 P0 S350 D1\n");
+		}
 	}
-	if (e.key == "ArrowDown")
-	{
-		MotionController_Write("M3000 P1 S350 D-1\n");
-	}
-	if (e.key == "ArrowLeft")
-	{
-		MotionController_Write("M3000 P0 S350 D-1\n");
-	}
-	if (e.key == "ArrowRight")
-	{
-		MotionController_Write("M3000 P0 S350 D1\n");
-	}
+
 	if (e.key == "Escape")
 	{
-		TextEditor_SaveGcode();
-		TextEditor_Hide();
-		MDITerminal_Hide();
+		if (CurrentFocus == "EDIT")
+		{
+			TextEditor_SaveGcode();
+			TextEditor_Hide();
+		}
+		else if (CurrentFocus == "MDI")
+		{
+			MDITerminal_Hide();
+		}
+		else if (CurrentFocus == "HMI")
+		{
+			ProgramAbort();
+		}
 	}
 	if (e.key == "F2" && AltKeyDown == true)
 	{
@@ -485,19 +528,34 @@ function GoHome()
 }
 function ProgramStart()
 {
-	for (var x = 0; x < GcodeLines.length; x++)
+	if (ProgramHoldFlag == true)
 	{
-		console.log("Pushing: " + GcodeLines[x]);
-		MotionController_Write(GcodeLines[x]);
+		ProgramHoldFlag = false;
+		MotionController_RecievedOK();
+		return;
+	}
+	if (ProgramUploaded == false)
+	{
+		for (var x = 0; x < GcodeLines.length; x++)
+		{
+			//console.log("Pushing: " + GcodeLines[x]);
+			MotionController_Write(GcodeLines[x]);
+		}
+		ProgramUploaded = true;
 	}
 }
 function ProgramHold()
 {
-
+	ProgramHoldFlag = true;
 }
 function ProgramAbort()
 {
-
+	ProgramUploaded = false;
+	ProgramHoldFlag = false;
+	MotionControllerStack = [];
+	WaitingForOkay = true;
+	MotionController_Write("M410");
+	MotionController_Write("M2101 P0 R1");
 }
 function main()
 {
