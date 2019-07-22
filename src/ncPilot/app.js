@@ -26,7 +26,7 @@ function MDITerminal_Init()
   MDITerminal.open(document.getElementById('terminal'));
 	MDITerminal.toggleFullScreen(true);
 	$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'});
-  MDITerminal.write('MDI> ');
+  MDITerminal.write(PS1);
 	MDILineBuffer = "";
 	MDITerminal.on('key', (key, ev) => {
         //console.log("Keycode: " + key.charCodeAt(0) + " Key: " + key);
@@ -54,13 +54,21 @@ function MDITerminal_Init()
 				{
 					MDITerminal_Eval("tab-complete");
 				}
-				else if (key == "[A") //up arrow
+				else if (key.charCodeAt(0) == 27 && key.includes("A")) //up arrow
 				{
 					MDITerminal_Eval("up-arrowkey");
 				}
-				else if (key == "[B") //down arrow
+				else if (key.charCodeAt(0) == 27 && key.includes("B")) //down arrow
 				{
 					MDITerminal_Eval("down-arrowkey");
+				}
+				else if (key.charCodeAt(0) == 27 && key.includes("C")) //Left arrow
+				{
+
+				}
+				else if (key.charCodeAt(0) == 27 && key.includes("D")) //Left arrow
+				{
+
 				}
 				else
 				{
@@ -417,6 +425,7 @@ function main()
 	window.addEventListener('keydown', KeyDownHandler, true);
 	window.addEventListener('keyup', KeyUpHandler, true);
 	CreateMenu();
+	MachineParameters_Init();
 	TextEditor_Init();
 	MotionController_Init();
 	MDITerminal_Init();
