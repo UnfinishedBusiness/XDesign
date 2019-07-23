@@ -16,15 +16,15 @@ var CurrentFile = null;
 
 function NewJob()
 {
-		jetcad.JobName = null;
-		jetcad.Stack = [];
-		jetcad.init();
+		jetcam.JobName = null;
+		jetcam.Stack = [];
+		jetcam.init();
 }
 function SaveJob()
 {
 	if (CurrentFile.includes(".job"))
 	{
-		fs.writeFile(CurrentFile, jetcad.ExportDXF(),
+		fs.writeFile(CurrentFile, JSON.stringify(jetcam.Stack),
 	    // callback function that is called after writing file is done
 	    function(err) {
 	        if (err) throw err;
@@ -47,7 +47,7 @@ function SaveJobAs()
 					if (file.includes(".job"))
 					{
 						console.log("Save job file: " + file);
-						fs.writeFile(file, jetcad.ExportDXF(),
+						fs.writeFile(file, JSON.stringify(jetcam.Stack),
 					    // callback function that is called after writing file is done
 					    function(err) {
 					        if (err) throw err;
@@ -68,10 +68,36 @@ function OpenJob()
 							]
     }, function (files) {
         if (files !== undefined) {
-					jetcad.Stack = []; //Delete Stack
+					jetcam.Stack = []; //Delete Stack
         	files.forEach(function(item, index, arr){
 						CurrentFile = item;
-						require('electron').remote.getCurrentWindow().setTitle("JetCad - " + CurrentFile);
+						require('electron').remote.getCurrentWindow().setTitle("jetcam - " + CurrentFile);
+						if (item.includes(".job"))
+						{
+							console.log("Opening Job File: " + item);
+							fs.readFile(item, 'utf-8', (err, data) => {
+								if(err){
+										alert("An error ocurred reading the file :" + err.message);
+										return;
+								}
+								jetcam.Stack = JSON.parse(data);
+							});
+						}
+					});
+        }
+    });
+}
+function ImportDrawing()
+{
+	const {dialog} = electron.remote;
+	dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections'],
+				filters: [
+								{ name: 'DXF', extensions: ['dxf'] },
+							]
+    }, function (files) {
+        if (files !== undefined) {
+        	files.forEach(function(item, index, arr){
 						if (item.includes(".dxf"))
 						{
 							console.log("Opening DXF File: " + item);
@@ -80,33 +106,7 @@ function OpenJob()
 										alert("An error ocurred reading the file :" + err.message);
 										return;
 								}
-								jetcad.ImportDXF(data, false);
-							});
-						}
-					});
-        }
-    });
-}
-function ImportJob()
-{
-	const {dialog} = electron.remote;
-	dialog.showOpenDialog({
-        properties: ['openFile', 'multiSelections'],
-				filters: [
-								{ name: 'JOB', extensions: ['job'] },
-							]
-    }, function (files) {
-        if (files !== undefined) {
-        	files.forEach(function(item, index, arr){
-						if (item.includes(".job"))
-						{
-							console.log("Opening DXF File: " + item);
-							fs.readFile(item, 'utf-8', (err, data) => {
-								if(err){
-										alert("An error ocurred reading the file :" + err.message);
-										return;
-								}
-								jetcad.ImportDXF(data, false);
+								jetcam.ImportDXF(data, false);
 							});
 						}
 					});
@@ -141,6 +141,10 @@ function CreateMenu()
 			{ label: 'Save As',
 			click: function() {
 				SaveJobAs();
+			}},
+			{ label: 'Import',
+			click: function() {
+				ImportDrawing();
 			}},
 			{ label: 'Debug',
 			click: function() {

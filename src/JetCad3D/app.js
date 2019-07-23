@@ -10,63 +10,111 @@ var CurrentFile = null;
 
 var renderer, scene, camera, controls;
 
-function init() {
-
-    // renderer
+function init()
+{
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
-
-    // scene
+    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 5000 );
+    camera.position.set( 0, 0, 100 );
+    camera.lookAt( 0, 0, 0 );
     scene = new THREE.Scene();
-
-    // camera
-    camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.set( 20, 20, 20 );
-
-    // controls
-    controls = new THREE.OrbitControls( camera );
-
-		var light = new THREE.HemisphereLight( 0xeeeeee, 0x888888, 1 );
-		light.position.set( 0, 20, 0 );
-		scene.add( light );
-
-    // axes
-    scene.add( new THREE.AxisHelper( 20 ) );
-
-    // geometry
-    var geometry = new THREE.SphereGeometry( 5, 12, 8 );
-
-    // material
-    var material = new THREE.MeshPhongMaterial( {
-        color: 0xff0000,
-        shading: THREE.FlatShading,
-        polygonOffset: true,
-        polygonOffsetFactor: 1, // positive value pushes polygon further away
-        polygonOffsetUnits: 1
-    } );
-
-    // mesh
-    var mesh = new THREE.Mesh( geometry, material );
-    scene.add( mesh );
-
-    var geo = new THREE.EdgesGeometry( mesh.geometry ); // or WireframeGeometry
-    var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
-    var wireframe = new THREE.LineSegments( geo, mat );
-    mesh.add( wireframe );
-
-}
-
-function animate() {
-
-    requestAnimationFrame( animate );
-
-    //controls.update();
-
     renderer.render( scene, camera );
-
 }
-
+function DrawLine(line)
+{
+  var material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+  var geometry = new THREE.Geometry();
+  geometry.vertices.push(new THREE.Vector3( line.start.x, line.start.y, line.start.z) );
+  geometry.vertices.push(new THREE.Vector3( line.end.x, line.end.y, line.end.z) );
+  var line = new THREE.Line( geometry, material );
+  scene.add( line );
+  return line;
+}
+function DrawArc(arc)
+{
+  var curve = new THREE.EllipseCurve(
+    arc.center.x, arc.center.y,             // ax, aY
+    arc.radius, arc.radius,            // xRadius, yRadius
+    arc.startAngle * Math.PI / 180, arc.endAngle * Math.PI / 180, // aStartAngle, aEndAngle
+    arc.direction             // aClockwise
+  );
+  var points = curve.getSpacedPoints( 20 );
+  var path = new THREE.Path();
+  var geometry = new THREE.Geometry().setFromPoints( points );
+  var material = new THREE.LineBasicMaterial( { color : 0xffffff } );
+  var line = new THREE.Line( geometry, material );
+  scene.add( line );
+  return line;
+}
+function test()
+{
+  DrawLine({ start: {x: 0, y: 0, z: 0}, end: { x: 10, y: 0, z: 0}});
+  DrawArc({ center: { x: 0, y: 0 }, radius: 5, startAngle: 0, endAngle: 90, direction: false });
+}
+function ParseDXF(data)
+{
+  var parser = new DxfParser();
+  try {
+      var dxf = parser.parseSync(data);
+      for (var i = 0; i < dxf.entities.length; i++)
+      {
+        if (dxf.entities[i].type == "CIRCLE")
+        {
+          //mported_stack.push({ type: "circle", origin: [dxf.entities[i].center.x, dxf.entities[i].center.y], radius: dxf.entities[i].radius });
+          DrawArc({ center: { x: dxf.entities[i].center.x, y: dxf.entities[i].center.y }, radius: dxf.entities[i].radius, startAngle: 0, endAngle: 0, direction: true });
+        }
+        else if (dxf.entities[i].type == "LINE")
+        {
+          //imported_stack.push({ type: "line", origin: [dxf.entities[i].vertices[0].x, dxf.entities[i].vertices[0].y], end: [dxf.entities[i].vertices[1].x, dxf.entities[i].vertices[1].y] });
+          DrawLine({ start: {x: dxf.entities[i].vertices[0].x, y: dxf.entities[i].vertices[0].y, z: dxf.entities[i].vertices[0].z}, end: { x: dxf.entities[i].vertices[1].x, y: dxf.entities[i].vertices[1].y, z: dxf.entities[i].vertices[1].z}});
+        }
+        else if (dxf.entities[i].type == "ARC")
+        {
+          //imported_stack.push({ type: "arc", origin: [dxf.entities[i].center.x, dxf.entities[i].center.y], startAngle: this.to_degrees(dxf.entities[i].startAngle), endAngle: this.to_degrees(dxf.entities[i].endAngle), radius: dxf.entities[i].radius });
+          DrawArc({ center: { x: dxf.entities[i].center.x, y: dxf.entities[i].center.y }, radius: dxf.entities[i].radius, startAngle: dxf.entities[i].startAngle * 180 / Math.PI, endAngle: dxf.entities[i].endAngle * 180 / Math.PI, direction: false });
+        }
+      }
+  }catch(err) {
+      return console.error(err.stack);
+  }
+}
+function animate() {
+    renderer.render( scene, camera );
+    requestAnimationFrame( animate );
+}
+function zoom(zoomFactor)
+{
+  camera.fov *= zoomFactor;
+  camera.updateProjectionMatrix();
+}
+function ImportDrawing()
+{
+	const {dialog} = electron.remote;
+	dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections'],
+				filters: [
+								{ name: 'DXF', extensions: ['dxf'] },
+								{ name: 'SVG', extensions: ['svg'] },
+							]
+    }, function (files) {
+        if (files !== undefined) {
+        	files.forEach(function(item, index, arr){
+						if (item.includes(".dxf"))
+						{
+							console.log("Opening DXF File: " + item);
+							fs.readFile(item, 'utf-8', (err, data) => {
+								if(err){
+										alert("An error ocurred reading the file :" + err.message);
+										return;
+								}
+								ParseDXF(data);
+							});
+						}
+					});
+        }
+    });
+}
 function CreateMenu()
 {
 	const {remote} = require('electron');
