@@ -121,6 +121,7 @@ function main()
 {
 	CreateMenu();
 	render.init();
+  Terminal_Init();
   animate();
 }
 $( document ).ready(function() {
