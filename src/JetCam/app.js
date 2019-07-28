@@ -6,25 +6,58 @@ var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
-let notification = new Notification();
 let navigation;
 let fonts;
-let jetcam = new PartView();
+let render = new ProfileRender();
+
+
 
 const Workbench = "JetCam";
 var CurrentFile = null;
 
+function ParseDXF(data, part_name)
+{
+  var parser = new DxfParser();
+  try {
+      var imported_stack = [];
+      var dxf = parser.parseSync(data);
+      for (var i = 0; i < dxf.entities.length; i++)
+      {
+        if (dxf.entities[i].type == "CIRCLE")
+        {
+          imported_stack.push({ type: "circle", origin: [dxf.entities[i].center.x, dxf.entities[i].center.y], radius: dxf.entities[i].radius, meta: render.copy_obj(render._defaultMeta)});
+        }
+        else if (dxf.entities[i].type == "LINE")
+        {
+          imported_stack.push({ type: "line", origin: [dxf.entities[i].vertices[0].x, dxf.entities[i].vertices[0].y], end: [dxf.entities[i].vertices[1].x, dxf.entities[i].vertices[1].y], meta: render.copy_obj(render._defaultMeta) });
+        }
+        else if (dxf.entities[i].type == "ARC")
+        {
+          imported_stack.push({ type: "arc", origin: [dxf.entities[i].center.x, dxf.entities[i].center.y], startAngle: render.to_degrees(dxf.entities[i].startAngle), endAngle: render.to_degrees(dxf.entities[i].endAngle), radius: dxf.entities[i].radius, meta: render.copy_obj(render._defaultMeta)});
+        }
+      }
+      var part = render.newPart(part_name);
+      part.entities = imported_stack;
+      render.Stack.push(part);
+  }catch(err) {
+      return console.error(err.stack);
+  }
+}
+function animate()
+{
+  //render.controls.update();
+  requestAnimationFrame ( animate );
+  render.renderer.render (render.scene, render.camera);
+}
 function NewJob()
 {
-		jetcam.JobName = null;
-		jetcam.Stack = [];
-		jetcam.init();
+
 }
 function SaveJob()
 {
 	if (CurrentFile.includes(".job"))
 	{
-		fs.writeFile(CurrentFile, JSON.stringify(jetcam.Stack),
+		fs.writeFile(CurrentFile, JSON.stringify(render.Stack),
 	    // callback function that is called after writing file is done
 	    function(err) {
 	        if (err) throw err;
@@ -47,7 +80,7 @@ function SaveJobAs()
 					if (file.includes(".job"))
 					{
 						console.log("Save job file: " + file);
-						fs.writeFile(file, JSON.stringify(jetcam.Stack),
+						fs.writeFile(file, JSON.stringify(render.Stack),
 					    // callback function that is called after writing file is done
 					    function(err) {
 					        if (err) throw err;
@@ -71,7 +104,7 @@ function OpenJob()
 					jetcam.Stack = []; //Delete Stack
         	files.forEach(function(item, index, arr){
 						CurrentFile = item;
-						require('electron').remote.getCurrentWindow().setTitle("jetcam - " + CurrentFile);
+						require('electron').remote.getCurrentWindow().setTitle("CAM - " + CurrentFile);
 						if (item.includes(".job"))
 						{
 							console.log("Opening Job File: " + item);
@@ -94,6 +127,7 @@ function ImportDrawing()
         properties: ['openFile', 'multiSelections'],
 				filters: [
 								{ name: 'DXF', extensions: ['dxf'] },
+								{ name: 'SVG', extensions: ['svg'] },
 							]
     }, function (files) {
         if (files !== undefined) {
@@ -106,7 +140,10 @@ function ImportDrawing()
 										alert("An error ocurred reading the file :" + err.message);
 										return;
 								}
-								jetcam.ImportDXF(data, false);
+                var path = require("path");
+                var filepath = item;
+                var name = path.parse(filepath).name;
+								ParseDXF(data, name);
 							});
 						}
 					});
@@ -159,11 +196,11 @@ function CreateMenu()
  menu.append(new MenuItem ({
 	 label: 'Options',
 	 submenu: [
-		 { label: 'Job',
+		 { label: 'Job Setup',
 		 click: function() {
 
 		 }},
-		 { label: 'Machine',
+		 { label: 'Machine Setup',
 		 click: function() {
 
 		 }},
@@ -180,11 +217,17 @@ function CreateMenu()
 function main()
 {
 	CreateMenu();
-	jetcam.AutoSaveHook = function(){
-		//console.log("Autosave Hook!");
-		SaveJob();
+	render.init();
+	animate();
+	render.mouse_over_check = function() {};
+	render.mouse_click_check = function() {};
+	render.mouse_drag_check = function(drag)
+	{
+		//console.log(drag);
+		render.Stack[1].offset[0] += drag.relative.x;
+		render.Stack[1].offset[1] += drag.relative.y;
+		render.Stack[1].updateRender = true;
 	};
-	jetcam.init();
 }
 $( document ).ready(function() {
     main();

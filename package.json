@@ -24,6 +24,7 @@
     "makerjs": "^0.14.0",
     "potrace": "^2.1.2",
     "serialport": "^7.1.5",
+    "tree-view": "^2.2.0",
     "xterm": "^3.14.5"
   }
 }

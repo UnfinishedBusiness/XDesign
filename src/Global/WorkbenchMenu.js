@@ -5,23 +5,19 @@ function appendWorkbenchMenu(menu)
   menu.append(new MenuItem ({
     label: 'Workbench',
 		submenu: [
-			{ label: 'JetCad',
+			{ label: 'CAD',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad/JetCad.html');
 			}},
-      { label: 'JetCad3D',
-			click: function() {
-				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCad3D/JetCad3D.html');
-			}},
-			{ label: 'JetCam',
+			{ label: 'CAM',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/JetCam/JetCam.html');
 			}},
-			{ label: 'ImageScan',
+			{ label: 'Vectorize',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/ImageScan/ImageScan.html');
 			}},
-			{ label: 'ncPilot',
+			{ label: 'Machine',
 			click: function() {
 				require('electron').remote.getCurrentWindow().loadFile('../layout/ncPilot/ncPilot.html');
 			}}
