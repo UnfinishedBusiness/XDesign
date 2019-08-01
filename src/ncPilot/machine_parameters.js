@@ -5,15 +5,15 @@ var machine_parameters = {
 };
 function MachineParameters_Init()
 {
-  if (fs.existsSync("machine_parameters.js"))
+  if (fs.existsSync("machine_parameters.json"))
   {
-    var buf = fs.readFileSync("machine_parameters.js", 'utf-8');
+    var buf = fs.readFileSync("machine_parameters.json", 'utf-8');
     machine_parameters = JSON.parse(buf);
     gcodeView.MachineExtents = machine_parameters.machine_extents;
   }
 }
 function MachineParameters_Save()
 {
-  fs.writeFileSync("machine_parameters.js", JSON.stringify(machine_parameters));
+  fs.writeFileSync("machine_parameters.json", JSON.stringify(machine_parameters));
   MachineParameters_Init();
 }

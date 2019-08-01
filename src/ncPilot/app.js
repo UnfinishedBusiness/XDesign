@@ -198,7 +198,7 @@ function MotionController_Write(buff)
 	else
 	{
 		SerialTransmissionLog.push("->" + buff);
-		MotionControlPort.write(buff + "\n");
+		MotionControlPort.write(buff + "\r\n");
 		WaitingForOkay = true;
 	}
 }
