@@ -213,10 +213,31 @@ function CreateMenu()
  appendWorkbenchMenu(menu);
 	Menu.setApplicationMenu(menu);
 }
-
+function build_tree()
+{
+  $(function () {
+    // 6 create an instance when the DOM is ready
+    $('#jstree').jstree();
+    // 7 bind to events triggered on the tree
+    $('#jstree').on("changed.jstree", function (e, data) {
+      console.log(data.selected);
+    });
+    // 8 interact with the tree - either way is OK
+    $('button').on('click', function () {
+      $('#jstree').jstree(true).select_node('child_node_1');
+      $('#jstree').jstree('select_node', 'child_node_1');
+      $.jstree.reference('#jstree').select_node('child_node_1');
+    });
+  });
+}
 function main()
 {
 	CreateMenu();
+  build_tree();
+  render._renderHeight = window.innerHeight - 50;
+  render._renderWidth = window.innerWidth - 200;
+  render._renderTopMargin = 50;
+  render._renderLeftMargin = 200;
 	render.init();
 	animate();
 	render.mouse_over_check = function() {};
