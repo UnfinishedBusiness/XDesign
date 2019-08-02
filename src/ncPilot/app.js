@@ -553,9 +553,8 @@ function ProgramAbort()
 	ProgramUploaded = false;
 	ProgramHoldFlag = false;
 	MotionControllerStack = [];
-	WaitingForOkay = true;
-	MotionController_Write("M410");
-	MotionController_Write("M2101 P0 R1");
+	WaitingForOkay = false;
+	MotionControlPort.write("abort\n");
 }
 function main()
 {
