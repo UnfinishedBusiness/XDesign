@@ -445,14 +445,17 @@ function KeyUpHandler(e)
 		}
 		if (e.key == "ArrowUp" || e.key == "ArrowDown")
 		{
-			MotionController_Write("M3001 P1\n");
+			MotionControlPort.write("soft_abort\n");
+			jogging_active = false;
 		}
 		if (e.key == "ArrowLeft" || e.key == "ArrowRight")
 		{
-			MotionController_Write("M3001 P0\n");
+			MotionControlPort.write("soft_abort\n");
+			jogging_active = false;
 		}
 	}
 }
+var jogging_active = false;
 function KeyDownHandler(e)
 {
 	if (e.key == "Alt")
@@ -468,19 +471,35 @@ function KeyDownHandler(e)
 		//console.log(e);
 		if (e.key == "ArrowUp")
 		{
-			MotionController_Write("M3000 P1 S350 D1\n");
+			if (jogging_active == false)
+			{
+				MotionControlPort.write("G0 X" + MachinePosition.x + " Y45\n");
+				jogging_active = true;
+			}
 		}
 		if (e.key == "ArrowDown")
 		{
-			MotionController_Write("M3000 P1 S350 D-1\n");
+			if (jogging_active == false)
+			{
+				MotionControlPort.write("G0 X" + MachinePosition.x + " Y0\n");
+				jogging_active = true;
+			}
 		}
 		if (e.key == "ArrowLeft")
 		{
-			MotionController_Write("M3000 P0 S350 D-1\n");
+			if (jogging_active == false)
+			{
+				MotionControlPort.write("G0 X0 Y" + MachinePosition.y + "\n");
+				jogging_active = true;
+			}
 		}
 		if (e.key == "ArrowRight")
 		{
-			MotionController_Write("M3000 P0 S350 D1\n");
+			if (jogging_active == false)
+			{
+				MotionControlPort.write("G0 X45 Y" + MachinePosition.y + "\n");
+				jogging_active = true;
+			}
 		}
 	}
 
@@ -554,7 +573,7 @@ function ProgramAbort()
 	ProgramHoldFlag = false;
 	MotionControllerStack = [];
 	WaitingForOkay = false;
-	MotionControlPort.write("abort\n");
+	MotionControlPort.write("soft_abort\n");
 }
 function main()
 {
