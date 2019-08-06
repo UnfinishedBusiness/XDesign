@@ -223,9 +223,9 @@ function MotionController_RecievedOK()
 					split[x] = "Y" + newY;
 				}
 			}
-			console.log("Before Work Offset: " + send_line);
+			//console.log("Before Work Offset: " + send_line);
 			send_line = split.join(" ");
-			console.log("After Work Offset: " + send_line);
+			//console.log("After Work Offset: " + send_line);
 		}
 		SerialTransmissionLog.push("->" + send_line);
 		MotionControlPort.write(send_line + "\n");
