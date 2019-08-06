@@ -13,6 +13,7 @@ let render = new ProfileRender();
 var GcodeLines = [];
 var GcodeFileName = "";
 var WaitingForOkay = false;
+var MovesOnStack = 0;
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
@@ -279,6 +280,7 @@ function MotionController_ParseInput(line)
 	SerialTransmissionLog.push("<-" + line);
 	if (line.includes("ok"))
 	{
+		MovesOnStack = parseFloat(line.split(":")[1]);
 		MotionController_RecievedOK();
 	}
 	else if (line.includes("DRO:"))
