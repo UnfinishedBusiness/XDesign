@@ -105,6 +105,8 @@ function MDITerminal_Hide()
 }
 function TextEditor_Show()
 {
+	editor.setValue(GcodeLines.join("\n"));
+	editor.clearSelection();
 	CurrentFocus = "EDIT";
 	$("#editor").show();
 }
@@ -437,6 +439,8 @@ const Runner = function() {
 				}
 			}
 			console.log("Simplified path by points by: " + (point_count - simplified_point_count));
+			point_count = 0;
+			simplified_point_count = 0;
 			part.entities = render.copy_obj(imported_stack);
 			render.Stack.push(part);
 			contour_stack = [];
@@ -488,12 +492,74 @@ function OpenGcodeFile()
 								}
 							}
 							runner.loadFromString(GcodeLines.join("\n"));
-							editor.setValue(GcodeLines.join("\n"));
-							editor.clearSelection();
 						});
 					});
         }
     });
+}
+function SimplifyOpenGcode()
+{
+	var get_point = function(send_line){
+		var ret = {x: 0, y: 0, f: 0};
+		var split = send_line.split(" ");
+		for (var x = 0; x < split.length; x++)
+		{
+			if (split[x].includes("X"))
+			{
+				ret.x = parseFloat(split[x].substring(1));
+			}
+			if (split[x].includes("Y"))
+			{
+				ret.y = parseFloat(split[x].substring(1));
+			}
+			if (split[x].includes("F"))
+			{
+				ret.f = parseFloat(split[x].substring(1));
+			}
+		}
+		return ret;
+	}
+	var point = {x: 0, y: 0};
+	var contour_stack = [];
+	var contour = {set_voltage_line: "", rapid_move_line: "", fire_torch_line: "", points: []};
+	for (var x = 0; x < GcodeLines.length; x++)
+	{
+		var line = GcodeLines[x];
+		if (line.includes("set_voltage")) //We are the beginning of a new contour
+		{
+			contour.set_voltage_line = line;
+		}
+		if (line.includes("G0")) //We are the beginning of a new contour
+		{
+			contour.rapid_move_line = line;
+		}
+		if (line.includes("fire_torch"))
+		{
+			contour.fire_torch_line = line;
+		}
+		if (line.includes("G1"))
+		{
+			contour.points.push(get_point(line));
+		}
+		if (line.includes("torch_off"))
+		{
+			contour_stack.push(contour);
+			contour = {set_voltage_line: "", rapid_move_line: "", fire_torch_line: "", points: []};
+		}
+	}
+	GcodeLines = [];
+	for (var x = 0; x < contour_stack.length; x++)
+	{
+		if (contour_stack[x].set_voltage_line != "") GcodeLines.push(contour_stack[x].set_voltage_line);
+		GcodeLines.push(contour_stack[x].rapid_move_line);
+		GcodeLines.push(contour_stack[x].fire_torch_line);
+		var num_of_point_before_simplify = contour_stack[x].points.length;
+		contour_stack[x].points = simplify(contour_stack[x].points, 0.008, true);
+		console.log("Simplified by " + (num_of_point_before_simplify - contour_stack[x].points.length) + " points!");
+		for (var y = 0; y < contour_stack[x].points.length; y++) GcodeLines.push("G1 X" + contour_stack[x].points[y].x + " Y" + contour_stack[x].points[y].y + " F" + contour_stack[x].points[y].f);
+		GcodeLines.push("torch_off");
+	}
+	GcodeLines.push("M30");
 }
 function KeyUpHandler(e)
 {
