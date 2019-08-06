@@ -9,7 +9,7 @@ var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
 var editor = null;
-var gcodeView = new GcodeView();
+let render = new ProfileRender();
 var GcodeLines = [];
 var GcodeFileName = "";
 var WaitingForOkay = false;
@@ -299,14 +299,16 @@ function MotionController_ParseInput(line)
 				$("#X_MCS_POS").html(value);
 				MachinePosition.x = parseFloat(value);
 				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
-				gcodeView.CrossHairPosition.x = parseFloat($("#X_MCS_POS").html());
+				render.Stack[0].offset[0] = parseFloat($("#X_MCS_POS").html());
+				render.Stack[0].updateRender = true;
 			}
 			if (key == "Y_MCS")
 			{
 				$("#Y_MCS_POS").html(value);
 				MachinePosition.y = parseFloat(value);
 				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
-				gcodeView.CrossHairPosition.y = parseFloat($("#Y_MCS_POS").html());
+				render.Stack[0].offset[1] = parseFloat($("#Y_MCS_POS").html());
+				render.Stack[0].updateRender = true;
 			}
 			if (key == "X_WO")
 			{
@@ -357,6 +359,7 @@ function MotionController_ParseInput(line)
 }
 var last_point = { x: 0, y: 0};
 var point = { x: 0, y: 0};
+var imported_stack = [];
 const Runner = function() {
     const handlers = {
         'G0': (params) => {
@@ -384,13 +387,16 @@ const Runner = function() {
 						}
 						//Plot a line! - Solid
 						//console.log("Pushing line: origin> " + last_point.x + ", " + last_point.y + " -> " + " " + point.x + ", " + point.y);
-						gcodeView.Stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y] });
+						//gcodeView.Stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y] });
+						imported_stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
 						last_point = { x: point.x, y: point.y };
         },
-				'M30': (params) => {
-            console.log('Rendering Entities!', params);
-							gcodeView.render(true);
-        }
+		'M30': (params) => {
+			var part = render.newPart("Gcode");
+			part.entities = render.copy_obj(imported_stack);
+			render.Stack.push(part);
+			imported_stack = [];
+		}
 
     };
 
@@ -407,7 +413,7 @@ function OpenGcodeFile()
         properties: ['openFile', 'multiSelections']
     }, function (files) {
         if (files !== undefined) {
-					gcodeView.Stack = [];
+					render.removePartFromStack("Gcode");
         	files.forEach(function(item, index, arr){
 						console.log("Opening File: " + item);
 						const runner = new Runner();
@@ -575,6 +581,12 @@ function ProgramAbort()
 	WaitingForOkay = false;
 	MotionControlPort.write("soft_abort\n");
 }
+function animate()
+{
+  //render.controls.update();
+  requestAnimationFrame ( animate );
+  render.renderer.render (render.scene, render.camera);
+}
 function main()
 {
 	window.addEventListener('keydown', KeyDownHandler, true);
@@ -584,7 +596,11 @@ function main()
 	TextEditor_Init();
 	MotionController_Init();
 	MDITerminal_Init();
-	gcodeView.init();
+	render.init();
+	animate();
+	render.mouse_over_check = function() {};
+	render.mouse_click_check = function() {};
+	render.mouse_drag_check = function() {};
 }
 $( document ).ready(function() {
     main();

@@ -6,7 +6,10 @@
   <head>
     <meta charset="UTF-8">
     <title>ncPilot</title>
-    <script src="../../lib/GcodeView.js"></script>
+    <script src="../../lib/three.js"></script>
+    <script src="../../lib/OrbitControls.js"></script>
+    <script src="../../lib/ProfileRender.js"></script>
+    <script src="../../lib/ProfileGeometry.js"></script>
     <script src="../../src/Global/WorkbenchMenu.js"></script>
     <script src="../../src/ncPilot/app.js"></script>
     <script src="../../src/ncPilot/mdi_commands.js"></script>
@@ -68,7 +71,7 @@
       <input id="Abort" class="button" type="button" value="Abort" onclick="ProgramAbort();"/>
       <input id="Open" class="button" type="button" value="Open" onclick="OpenGcodeFile();"/>
     </div>
-    <div id="Content"></div>
+  
   </body>
 
   <script>

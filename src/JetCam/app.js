@@ -233,11 +233,11 @@ function build_tree()
 function main()
 {
 	CreateMenu();
-  build_tree();
-  render._renderHeight = window.innerHeight - 50;
-  render._renderWidth = window.innerWidth - 200;
-  render._renderTopMargin = 50;
-  render._renderLeftMargin = 200;
+	build_tree();
+	render._renderHeight = window.innerHeight - 50;
+	render._renderWidth = window.innerWidth - 200;
+	render._renderTopMargin = 50;
+	render._renderLeftMargin = 200;
 	render.init();
 	animate();
 	render.mouse_over_check = function() {};
