@@ -175,11 +175,7 @@ function MotionController_Init()
 				});
 				// The open event is always emitted
 				MotionControlPort.on('open', function() {
-					for (var x = 0; x < machine_parameters.startup_lines.length; x++)
-					{
-						MotionController_Write(machine_parameters.startup_lines[x]);
-					}
-
+					
 				});
 			}
 	  });
@@ -567,7 +563,7 @@ function Z_Probe()
 }
 function GoHome()
 {
-	MotionController_Write("M2101 P0 R2"); //Retract torch 3 inches and will turn off torch if it's on
+	MotionController_Write("torch_off");
   	MotionController_Write("G0 X" + WorkOffset.x + " Y" + WorkOffset.y);
 }
 function ProgramStart()
