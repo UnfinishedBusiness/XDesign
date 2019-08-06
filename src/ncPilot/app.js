@@ -18,6 +18,7 @@ const Interpreter = require('gcode-interpreter');
 const Workbench = "ncPilot";
 var WorkOffset = { x: 0, y: 0};
 var MachinePosition = { x: 0, y: 0};
+var WayPoint = { x: 0, y: 0 };
 var MotionControllerStack = [];
 var AltKeyDown = false;
 
@@ -129,7 +130,7 @@ function TextEditor_SaveGcode()
 			GcodeLines.push(lines[x]);
 		}
 	}
-	gcodeView.Stack = [];
+	render.removePartFromStack("Gcode");
 	const runner = new Runner();
 	runner.loadFromString(GcodeLines.join("\n"));
 	if (GcodeFileName != "")
@@ -310,7 +311,7 @@ function MotionController_ParseInput(line)
 				render.Stack[0].offset[1] = parseFloat($("#Y_MCS_POS").html());
 				render.Stack[0].updateRender = true;
 			}
-			if (key == "X_WO")
+			/*if (key == "X_WO")
 			{
 				if (parseFloat(value) != WorkOffset.x)
 				{
@@ -329,7 +330,7 @@ function MotionController_ParseInput(line)
 					$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
 					gcodeView.render(true);
 				}
-			}
+			}*/
 			if (key == "FEEDRATE")
 			{
 				$("#FEED_Value").html(value);
@@ -464,13 +465,29 @@ function KeyUpHandler(e)
 var jogging_active = false;
 function KeyDownHandler(e)
 {
+	//console.log(e);
 	if (e.key == "Alt")
 	{
 		AltKeyDown = true;
 	}
-	if (e.jey == "LeftAlt")
+	if (e.key == "LeftAlt")
 	{
 		AltKeyDown = false;
+	}
+	if (e.code == "Tab")
+	{
+		if (CurrentFocus == "HMI")
+		{
+			if (WayPoint.x != 0 && WayPoint.y != 0)
+			{
+				e.preventDefault();
+				//There is a waypoint set. Rapid to it and clear it
+				render.removePartFromStack("Waypoint");
+				MotionController_Write("G0 X" + WayPoint.x + " Y" + WayPoint.y);
+				WayPoint = {x: 0, y: 0};
+				
+			}
+		}
 	}
 	if (CurrentFocus == "HMI")
 	{
@@ -522,6 +539,8 @@ function KeyDownHandler(e)
 		}
 		else if (CurrentFocus == "HMI")
 		{
+			WayPoint = {x: 0, y: 0};
+			render.removePartFromStack("Waypoint");
 			ProgramAbort();
 		}
 	}
@@ -549,7 +568,7 @@ function Z_Probe()
 function GoHome()
 {
 	MotionController_Write("M2101 P0 R2"); //Retract torch 3 inches and will turn off torch if it's on
-  MotionController_Write("G0 X" + WorkOffset.x + " Y" + WorkOffset.y);
+  	MotionController_Write("G0 X" + WorkOffset.x + " Y" + WorkOffset.y);
 }
 function ProgramStart()
 {
@@ -599,7 +618,17 @@ function main()
 	render.init();
 	animate();
 	render.mouse_over_check = function() {};
-	render.mouse_click_check = function() {};
+	render.mouse_click_check = function() {
+		//console.log("Adding way point to: X" + render.mousePosition.x + " Y" + render.mousePosition.y);
+		render.removePartFromStack("Waypoint");
+		var waypoint = this.newPart("Waypoint");
+		var factor = render.camera.position.z;
+		waypoint.entities.push({ type: "circle", origin: [render.mousePosition.x - (0.010 * factor), render.mousePosition.y + (0.010 * factor)], radius: factor * 0.005, meta: render.copy_obj(render._liveMeta)});
+		waypoint.internal = true;
+		render.Stack.push(waypoint);
+		WayPoint.x = render.mousePosition.x;
+		WayPoint.y = render.mousePosition.y;
+	};
 	render.mouse_drag_check = function() {};
 }
 $( document ).ready(function() {
