@@ -213,10 +213,6 @@ function MotionController_RecievedOK()
 	{
 		SerialTransmissionLog.push("->" + send_line);
 		MotionControlPort.write(send_line + "\n");
-		if (MovesOnStack > 20)
-		{
-			MotionControlPort.write("run\n");
-		}
 		if (send_line.includes("M30"))
 		{
 			ProgramUploaded = false; //We can press start again after the program finishes!
@@ -574,10 +570,10 @@ function GoHome()
 }
 function ProgramStart()
 {
+	MotionControlPort.write("run\n"); //Make sure we are in a run state
 	if (ProgramHoldFlag == true)
 	{
 		ProgramHoldFlag = false;
-		MotionControlPort.write("hold\n"); //We need to hold until we have at least 20 moves on the stack
 		MotionController_RecievedOK();
 		return;
 	}
@@ -606,8 +602,10 @@ function ProgramAbort()
 function animate()
 {
   //render.controls.update();
-  requestAnimationFrame ( animate );
-  render.renderer.render (render.scene, render.camera);
+  //requestAnimationFrame ( animate );
+  setInterval(() => {
+	render.renderer.render (render.scene, render.camera);
+  }, 150); 
 }
 function main()
 {
