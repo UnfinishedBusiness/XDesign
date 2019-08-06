@@ -1,6 +1,7 @@
 const electron = require('electron');
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
+const simplify = require("simplify-js");
 var MotionControlPort;
 var MDITerminal;
 var MDILineBuffer;
@@ -372,9 +373,10 @@ function MotionController_ParseInput(line)
 		}
 	}
 }
-var last_point = { x: 0, y: 0};
-var point = { x: 0, y: 0};
-var imported_stack = [];
+var contour_stack = [];
+var new_contour = [];
+var point = {x: 0, y: 0};
+var point_count = 0;
 const Runner = function() {
     const handlers = {
         'G0': (params) => {
@@ -387,8 +389,10 @@ const Runner = function() {
 						{
 							point.y = params.Y;
 						}
-						//Plot a rapid line! - Dashed
-						last_point = { x: point.x, y: point.y };
+						new_contour.push({x: point.x, y: point.y});
+						point_count++;
+						contour_stack.push(new_contour); //beggining of new contour
+						new_contour = [];
         },
         'G1': (params) => {
             //console.log('G1', params);
@@ -403,12 +407,35 @@ const Runner = function() {
 						//Plot a line! - Solid
 						//console.log("Pushing line: origin> " + last_point.x + ", " + last_point.y + " -> " + " " + point.x + ", " + point.y);
 						//gcodeView.Stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y] });
-						imported_stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
-						last_point = { x: point.x, y: point.y };
+						//imported_stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
+						new_contour.push({x: point.x, y: point.y});
+						point_count++;
         },
 		'M30': (params) => {
 			var part = render.newPart("Gcode");
-			part.entities = render.copy_obj(imported_stack);
+			var last_point = {x: 0, y: 0};
+			var simplified_point_count = 0;
+			//console.log(contour_stack);
+			for (var x = 1; x < contour_stack.length; x++)
+			{
+				var simplified_path = simplify(contour_stack[x], 0.008, true);
+				for (var y = 0; y < simplified_path.length; y++)
+				{
+					if (y == 0)
+					{
+						last_point = {x: simplified_path[y].x, y: simplified_path[y].y};
+						simplified_point_count++;
+					}
+					else
+					{
+						point = {x: simplified_path[y].x, y: simplified_path[y].y};
+						part.entities.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
+						simplified_point_count++;
+						last_point = {x: simplified_path[y].x, y: simplified_path[y].y};
+					}
+				}
+			}
+			console.log("Simplified path by points by: " + (point_count - simplified_point_count));
 			render.Stack.push(part);
 			imported_stack = [];
 			for (var x = 0; x < render.Stack.length; x++)
