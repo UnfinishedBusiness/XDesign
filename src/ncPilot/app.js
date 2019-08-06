@@ -415,10 +415,11 @@ const Runner = function() {
 			var part = render.newPart("Gcode");
 			var last_point = {x: 0, y: 0};
 			var simplified_point_count = 0;
+			imported_stack = [];
 			//console.log(contour_stack);
 			for (var x = 1; x < contour_stack.length; x++)
 			{
-				var simplified_path = simplify(contour_stack[x], 0.008, true);
+				var simplified_path = simplify(contour_stack[x], 0.012, true);
 				for (var y = 0; y < simplified_path.length; y++)
 				{
 					if (y == 0)
@@ -429,15 +430,16 @@ const Runner = function() {
 					else
 					{
 						point = {x: simplified_path[y].x, y: simplified_path[y].y};
-						part.entities.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
+						imported_stack.push({ type: "line", origin: [last_point.x, last_point.y], end: [point.x, point.y], meta: render.copy_obj(render._defaultMeta) });
 						simplified_point_count++;
 						last_point = {x: simplified_path[y].x, y: simplified_path[y].y};
 					}
 				}
 			}
 			console.log("Simplified path by points by: " + (point_count - simplified_point_count));
+			part.entities = render.copy_obj(imported_stack);
 			render.Stack.push(part);
-			imported_stack = [];
+			contour_stack = [];
 			for (var x = 0; x < render.Stack.length; x++)
 			{
 				if (render.Stack[x].part_name == "Gcode")
