@@ -6,8 +6,6 @@ var MDITerminal;
 var MDILineBuffer;
 var $ = require('jquery');
 var fs = require('fs');
-let DxfParser = require('dxf-parser');
-let DxfWriter = require('dxf-writer');
 var editor = null;
 let render = new ProfileRender();
 var GcodeLines = [];
@@ -17,8 +15,6 @@ var MovesOnStack = 0;
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
-var WorkOffset = { x: 0, y: 0};
-var MachinePosition = { x: 0, y: 0};
 var WayPoint = { x: 0, y: 0 };
 var MotionControllerStack = [];
 var AltKeyDown = false;
@@ -154,8 +150,6 @@ function TextEditor_Init()
 }
 function MotionController_Init()
 {
-	var util = require("util"), repl = require("repl");
-
 	SerialPort.list(function (err, ports) {
 	  ports.forEach(function(port) {
 			console.log("Port = " + port.comName + " pnpId= " + port.pnpId + " manufacturer= " + port.manufacturer);
@@ -211,6 +205,28 @@ function MotionController_RecievedOK()
 	if (send_line == undefined) return;
 	if (ProgramHoldFlag == false)
 	{
+		if (send_line.includes("G0") || send_line.includes("G1"))
+		{
+			var split = send_line.split(" ");
+			for (var x = 0; x < split.length; x++)
+			{
+				if (split[x].includes("X"))
+				{
+					var newX = parseFloat(split[x].substring(1));
+					newX += machine_parameters.WorkOffset.x;
+					split[x] = "X" + newX;
+				}
+				if (split[x].includes("Y"))
+				{
+					var newY = parseFloat(split[x].substring(1));
+					newY += machine_parameters.WorkOffset.y;
+					split[x] = "Y" + newY;
+				}
+			}
+			console.log("Before Work Offset: " + send_line);
+			send_line = split.join(" ");
+			console.log("After Work Offset: " + send_line);
+		}
 		SerialTransmissionLog.push("->" + send_line);
 		MotionControlPort.write(send_line + "\n");
 		if (send_line.includes("M30"))
@@ -296,36 +312,36 @@ function MotionController_ParseInput(line)
 			if (key == "X_MCS")
 			{
 				$("#X_MCS_POS").html(value);
-				MachinePosition.x = parseFloat(value);
-				$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
-				render.Stack[0].offset[0] = parseFloat($("#X_MCS_POS").html());
+				machine_parameters.MachinePosition.x = parseFloat(value);
+				$("#X_WCS_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
+				render.Stack[0].offset[0] = machine_parameters.MachinePosition.x;
 				render.Stack[0].updateRender = true;
 			}
 			if (key == "Y_MCS")
 			{
 				$("#Y_MCS_POS").html(value);
-				MachinePosition.y = parseFloat(value);
-				$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
-				render.Stack[0].offset[1] = parseFloat($("#Y_MCS_POS").html());
+				machine_parameters.MachinePosition.y = parseFloat(value);
+				$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
+				render.Stack[0].offset[1] = machine_parameters.MachinePosition.y;
 				render.Stack[0].updateRender = true;
 			}
 			/*if (key == "X_WO")
 			{
-				if (parseFloat(value) != WorkOffset.x)
+				if (parseFloat(value) != machine_parameters.WorkOffset.x)
 				{
-					WorkOffset.x = parseFloat(value);
-					gcodeView.WorkOffset.x = WorkOffset.x;
-					$("#X_WCS_POS").html((MachinePosition.x + WorkOffset.x).toFixed(4));
+					machine_parameters.WorkOffset.x = parseFloat(value);
+					gcodeView.machine_parameters.WorkOffset.x = machine_parameters.WorkOffset.x;
+					$("#X_WCS_POS").html((machine_parameters.MachinePosition.x + machine_parameters.WorkOffset.x).toFixed(4));
 					gcodeView.render(true);
 				}
 			}
 			if (key == "Y_WO")
 			{
-				if (parseFloat(value) != WorkOffset.y)
+				if (parseFloat(value) != machine_parameters.WorkOffset.y)
 				{
-					WorkOffset.y = parseFloat(value);
-					gcodeView.WorkOffset.y = WorkOffset.y;
-					$("#Y_WCS_POS").html((MachinePosition.y + WorkOffset.y).toFixed(4));
+					machine_parameters.WorkOffset.y = parseFloat(value);
+					gcodeView.machine_parameters.WorkOffset.y = machine_parameters.WorkOffset.y;
+					$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y + machine_parameters.WorkOffset.y).toFixed(4));
 					gcodeView.render(true);
 				}
 			}*/
@@ -395,6 +411,16 @@ const Runner = function() {
 			part.entities = render.copy_obj(imported_stack);
 			render.Stack.push(part);
 			imported_stack = [];
+			for (var x = 0; x < render.Stack.length; x++)
+			{
+				if (render.Stack[x].part_name == "Gcode")
+				{
+					render.Stack[x].offset[0] = machine_parameters.WorkOffset.x;
+					render.Stack[x].offset[1] = machine_parameters.WorkOffset.y;
+					render.Stack[x].updateRender = true;
+					break;
+				}
+			}
 		}
 
     };
@@ -444,7 +470,7 @@ function KeyUpHandler(e)
 {
 	if (CurrentFocus == "HMI")
 	{
-		if (e.jey == "LeftAlt")
+		/*if (e.jey == "LeftAlt")
 		{
 			AltKeyDown = false;
 		}
@@ -457,7 +483,7 @@ function KeyUpHandler(e)
 		{
 			MotionControlPort.write("soft_abort\n");
 			jogging_active = false;
-		}
+		}*/
 	}
 }
 var jogging_active = false;
@@ -481,7 +507,7 @@ function KeyDownHandler(e)
 				e.preventDefault();
 				//There is a waypoint set. Rapid to it and clear it
 				render.removePartFromStack("Waypoint");
-				MotionController_Write("G0 X" + WayPoint.x + " Y" + WayPoint.y);
+				MotionController_Write("G0 X" + WayPoint.x.toFixed(5) + " Y" + WayPoint.y.toFixed(5));
 				WayPoint = {x: 0, y: 0};
 				
 			}
@@ -490,11 +516,11 @@ function KeyDownHandler(e)
 	if (CurrentFocus == "HMI")
 	{
 		//console.log(e);
-		if (e.key == "ArrowUp")
+		/*if (e.key == "ArrowUp")
 		{
 			if (jogging_active == false)
 			{
-				MotionControlPort.write("G0 X" + MachinePosition.x + " Y45\n");
+				MotionControlPort.write("G0 X" + machine_parameters.MachinePosition.x + " Y45\n");
 				jogging_active = true;
 			}
 		}
@@ -502,7 +528,7 @@ function KeyDownHandler(e)
 		{
 			if (jogging_active == false)
 			{
-				MotionControlPort.write("G0 X" + MachinePosition.x + " Y0\n");
+				MotionControlPort.write("G0 X" + machine_parameters.MachinePosition.x + " Y0\n");
 				jogging_active = true;
 			}
 		}
@@ -510,7 +536,7 @@ function KeyDownHandler(e)
 		{
 			if (jogging_active == false)
 			{
-				MotionControlPort.write("G0 X0 Y" + MachinePosition.y + "\n");
+				MotionControlPort.write("G0 X0 Y" + machine_parameters.MachinePosition.y + "\n");
 				jogging_active = true;
 			}
 		}
@@ -518,10 +544,10 @@ function KeyDownHandler(e)
 		{
 			if (jogging_active == false)
 			{
-				MotionControlPort.write("G0 X45 Y" + MachinePosition.y + "\n");
+				MotionControlPort.write("G0 X45 Y" + machine_parameters.MachinePosition.y + "\n");
 				jogging_active = true;
 			}
-		}
+		}*/
 	}
 
 	if (e.key == "Escape")
@@ -553,20 +579,42 @@ function KeyDownHandler(e)
 }
 function SetX_Offset()
 {
-	MotionController_Write("G92 X0");
+	machine_parameters.WorkOffset.x = machine_parameters.MachinePosition.x;
+	$("#X_WCS_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
+	for (var x = 0; x < render.Stack.length; x++)
+	{
+		if (render.Stack[x].part_name == "Gcode")
+		{
+			render.Stack[x].offset[0] = machine_parameters.WorkOffset.x;
+			render.Stack[x].offset[1] = machine_parameters.WorkOffset.y;
+			render.Stack[x].updateRender = true;
+			break;
+		}
+	}
 }
 function SetY_Offset()
 {
-	MotionController_Write("G92 Y0");
+	machine_parameters.WorkOffset.y = machine_parameters.MachinePosition.y;
+	$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
+	for (var x = 0; x < render.Stack.length; x++)
+	{
+		if (render.Stack[x].part_name == "Gcode")
+		{
+			render.Stack[x].offset[0] = machine_parameters.WorkOffset.x;
+			render.Stack[x].offset[1] = machine_parameters.WorkOffset.y;
+			render.Stack[x].updateRender = true;
+			break;
+		}
+	}
 }
 function Z_Probe()
 {
-	MotionController_Write("M2100 S0");
+	//MotionController_Write("M2100 S0");
 }
 function GoHome()
 {
 	MotionController_Write("torch_off");
-  	MotionController_Write("G0 X" + WorkOffset.x + " Y" + WorkOffset.y);
+  	MotionController_Write("G0 X-" + machine_parameters.WorkOffset.x + " Y-" + machine_parameters.WorkOffset.y);
 }
 function ProgramStart()
 {
@@ -617,6 +665,14 @@ function main()
 	MotionController_Init();
 	MDITerminal_Init();
 	render.init();
+	var machine_border = render.newPart("machine_boarder");
+	machine_border.internal = true;
+	machine_border.entities.push({ type: "line", origin: [0, 0], end: [machine_parameters.machine_extents.x, 0], meta: render.copy_obj(render._crosshairMeta)});
+	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, 0], end: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], meta: render.copy_obj(render._crosshairMeta)});
+	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], end: [0, machine_parameters.machine_extents.y], meta: render.copy_obj(render._crosshairMeta)});
+	machine_border.entities.push({ type: "line", origin: [0, machine_parameters.machine_extents.y], end: [0, 0], meta: render.copy_obj(render._crosshairMeta)});
+	render.Stack.push(machine_border);
+
 	animate();
 	render.mouse_over_check = function() {};
 	render.mouse_click_check = function() {
