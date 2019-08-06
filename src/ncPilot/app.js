@@ -217,13 +217,13 @@ function MotionController_RecievedOK()
 				{
 					var newX = parseFloat(split[x].substring(1));
 					newX += machine_parameters.WorkOffset.x;
-					split[x] = "X" + newX;
+					split[x] = "X" + newX.toFixed(5);
 				}
 				if (split[x].includes("Y"))
 				{
 					var newY = parseFloat(split[x].substring(1));
 					newY += machine_parameters.WorkOffset.y;
-					split[x] = "Y" + newY;
+					split[x] = "Y" + newY.toFixed(5);
 				}
 			}
 			//console.log("Before Work Offset: " + send_line);
