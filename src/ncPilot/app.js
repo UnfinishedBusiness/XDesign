@@ -759,6 +759,10 @@ function main()
 	TextEditor_Init();
 	MotionController_Init();
 	MDITerminal_Init();
+	//render._renderHeight = window.innerHeight - 400;
+	//render._renderWidth = window.innerWidth - 400;
+	//render._renderTopMargin = 300;
+	//render._renderLeftMargin = 400;
 	render.init();
 	var machine_border = render.newPart("machine_boarder");
 	machine_border.internal = true;

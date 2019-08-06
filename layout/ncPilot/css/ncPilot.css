@@ -19,12 +19,42 @@ body {
     -ms-user-select: none;
     user-select: none;
     overflow: hidden;
-    background: black;
+    background-color: #1B282E;
     font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: red;
     font-weight: 400;
     overflow-x: hidden;
     overflow-y: hidden;
+}
+#DRO{
+  position: absolute;
+  width: 325px;
+  height: 100%;
+  background-color: #1B282E;
+}
+.big_label{
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 60px;
+  color: #FF5951;
+  max-width: 500px;
+}
+.small_label{
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  color: #FF5951;
+  margin-left: 10px;
+}
+.pos_value{
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 60px;
+  color: #51C426;
+  margin-left: 20px;
+}
+.abs_value{
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  color: #7D7D7D;
+  margin-left: 10px;
 }
 .layout-boxed html,
 .layout-boxed body {

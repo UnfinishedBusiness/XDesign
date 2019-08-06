@@ -3,14 +3,14 @@ canvas {
 	height: 100%;
 }
 body {
-	background-color: #ECF0F5;
+	background-color: #1B282E;
 	margin: 0px;
 	overflow: hidden;
 }
 PartTree{
 	position: absolute;
 	border-style: solid;
-  border-width: 5px;
+  	border-width: 5px;
 	padding: 2px;
 	top: 50px;
 	left: 5px;
