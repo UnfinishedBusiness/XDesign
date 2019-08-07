@@ -327,11 +327,11 @@ function MotionController_ParseInput(line)
 			}
 			if (key == "THC_SET_VOLTAGE")
 			{
-				$("#SET_VOLTAGE").html(value);
+				$("#SET_VOLTAGE").html(parseFloat(value).toFixed(1));
 			}
 			if (key == "THC_ARC_VOLTAGE")
 			{
-				$("#ARC_VOLTAGE").html(value);
+				$("#ARC_VOLTAGE").html(parseFloat(value).toFixed(1));
 			}
 			if (key == "UNITS")
 			{
