@@ -60,15 +60,68 @@ body {
   background: #4CAF50;
   cursor: pointer;
 }
-.button {
-    border: 2px outset black;
-    background-color: white;
-    height:50px;
-    width:50px;
-    cursor:pointer;
-}
 
-.button:hover {
-   background-color: green;
-    color:white;
-}
+/*!
+ *   AdminLTE v2.4.0
+ *   Author: Almsaeed Studio
+ *	 Website: Almsaeed Studio <https://adminlte.io>
+ *   License: Open source - MIT
+ *           Please visit http://opensource.org/licenses/MIT for more information
+ */
+/*
+ * Core: General Layout Style
+ * -------------------------
+ */
+ html,
+ body {
+   height: 100%;
+   -webkit-touch-callout: none;
+     -webkit-user-select: none;
+     -khtml-user-select: none;
+     -moz-user-select: none;
+     -ms-user-select: none;
+     user-select: none;
+     overflow: hidden;
+     background-color: #1B282E;
+     font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+     color: red;
+     font-weight: 400;
+     overflow-x: hidden;
+     overflow-y: hidden;
+ }
+ .button_container > .button {
+   float: left;
+   width: 16%;
+ }
+ .button_container{
+   
+ }
+ .button{
+   padding-top: 20px;
+   padding-right: 49px;
+   padding-bottom: 20px;
+   padding-left: 49px;
+   margin-top: 10px;
+   margin-right: 10px;
+   border-radius: 10px;
+   color: #BD7509;
+   font-size: 20px;
+   background-color: #26363E;
+   cursor:pointer;
+ }
+ .button:hover{
+   color: #51C426;
+   background-color: #26363E;
+   cursor:pointer;
+ }
+ .divider{
+   padding-top: 10px;
+   padding-right: 30px;
+   margin-top: 30px;
+   margin-right: 10px;
+   margin-bottom: 20px;
+   border-radius: 10px;
+   color: #FF5951;
+   background-color: #26363E;
+ }
+
