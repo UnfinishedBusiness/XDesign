@@ -247,20 +247,9 @@ function CreateMenu()
   menu.append(new MenuItem ({
     label: 'File',
 		submenu: [
-			{ label: 'New',
+			{ label: 'Open Gcode',
 			click: function() {
-				NewDrawing();
-			}},
-			{ label: 'Open',
-			click: function() {
-				OpenDrawing();
-			}},
-			{ label: 'Save'
-
-			},
-			{ label: 'Save As',
-			click: function() {
-				SaveDrawingAs();
+				OpenGcodeFile();
 			}},
 			{ label: 'Debug',
 			click: function() {
@@ -314,63 +303,43 @@ function MotionController_ParseInput(line)
 			//console.log("key=" + pair[0] + " value=" + pair[1]);
 			if (key == "X_MCS")
 			{
-				$("#X_MCS_POS").html(value);
+				$("#X_POS_ABS").html(value);
 				machine_parameters.MachinePosition.x = parseFloat(value);
-				$("#X_WCS_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
+				$("#X_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
 				render.Stack[0].offset[0] = machine_parameters.MachinePosition.x;
 				render.Stack[0].updateRender = true;
 			}
 			if (key == "Y_MCS")
 			{
-				$("#Y_MCS_POS").html(value);
+				$("#Y_POS_ABS").html(value);
 				machine_parameters.MachinePosition.y = parseFloat(value);
-				$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
+				$("#Y_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
 				render.Stack[0].offset[1] = machine_parameters.MachinePosition.y;
 				render.Stack[0].updateRender = true;
 			}
-			/*if (key == "X_WO")
-			{
-				if (parseFloat(value) != machine_parameters.WorkOffset.x)
-				{
-					machine_parameters.WorkOffset.x = parseFloat(value);
-					gcodeView.machine_parameters.WorkOffset.x = machine_parameters.WorkOffset.x;
-					$("#X_WCS_POS").html((machine_parameters.MachinePosition.x + machine_parameters.WorkOffset.x).toFixed(4));
-					gcodeView.render(true);
-				}
-			}
-			if (key == "Y_WO")
-			{
-				if (parseFloat(value) != machine_parameters.WorkOffset.y)
-				{
-					machine_parameters.WorkOffset.y = parseFloat(value);
-					gcodeView.machine_parameters.WorkOffset.y = machine_parameters.WorkOffset.y;
-					$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y + machine_parameters.WorkOffset.y).toFixed(4));
-					gcodeView.render(true);
-				}
-			}*/
 			if (key == "FEEDRATE")
 			{
-				$("#FEED_Value").html(value);
+				//$("#FEED_Value").html(value);
 			}
 			if (key == "VELOCITY")
 			{
-				$("#VEL_Value").html(value);
+				$("#FEED_RATE").html(value);
 			}
 			if (key == "THC_SET_VOLTAGE")
 			{
-				$("#SET_Value").html(value);
+				$("#SET_VOLTAGE").html(value);
 			}
 			if (key == "THC_ARC_VOLTAGE")
 			{
-				$("#ARC_Value").html(value);
+				$("#ARC_VOLTAGE").html(value);
 			}
 			if (key == "UNITS")
 			{
-				$("#UNITS_Value").html(value);
+				$("#UNITS").html(value);
 			}
 			if (key == "STATUS")
 			{
-				$("#STATUS_Value").html(value);
+				$("#STATUS").html(value);
 			}
 		}
 	}
@@ -391,7 +360,7 @@ const Runner = function() {
 						{
 							point.y = params.Y;
 						}
-						new_contour.push({x: point.x, y: point.y});
+						//new_contour.push({x: point.x, y: point.y});
 						point_count++;
 						contour_stack.push(new_contour); //beggining of new contour
 						new_contour = [];
@@ -414,6 +383,7 @@ const Runner = function() {
 						point_count++;
         },
 		'M30': (params) => {
+			contour_stack.push(new_contour); //beggining of new contour
 			var part = render.newPart("Gcode");
 			var last_point = {x: 0, y: 0};
 			var simplified_point_count = 0;
@@ -675,7 +645,7 @@ function KeyDownHandler(e)
 function SetX_Offset()
 {
 	machine_parameters.WorkOffset.x = machine_parameters.MachinePosition.x;
-	$("#X_WCS_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
+	$("#X_POS").html((machine_parameters.MachinePosition.x - machine_parameters.WorkOffset.x).toFixed(4));
 	for (var x = 0; x < render.Stack.length; x++)
 	{
 		if (render.Stack[x].part_name == "Gcode")
@@ -690,7 +660,7 @@ function SetX_Offset()
 function SetY_Offset()
 {
 	machine_parameters.WorkOffset.y = machine_parameters.MachinePosition.y;
-	$("#Y_WCS_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
+	$("#Y_POS").html((machine_parameters.MachinePosition.y - machine_parameters.WorkOffset.y).toFixed(4));
 	for (var x = 0; x < render.Stack.length; x++)
 	{
 		if (render.Stack[x].part_name == "Gcode")
@@ -766,10 +736,12 @@ function main()
 	render.init();
 	var machine_border = render.newPart("machine_boarder");
 	machine_border.internal = true;
-	machine_border.entities.push({ type: "line", origin: [0, 0], end: [machine_parameters.machine_extents.x, 0], meta: render.copy_obj(render._crosshairMeta)});
-	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, 0], end: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], meta: render.copy_obj(render._crosshairMeta)});
-	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], end: [0, machine_parameters.machine_extents.y], meta: render.copy_obj(render._crosshairMeta)});
-	machine_border.entities.push({ type: "line", origin: [0, machine_parameters.machine_extents.y], end: [0, 0], meta: render.copy_obj(render._crosshairMeta)});
+	var border_meta = render.copy_obj(render._crosshairMeta);
+	border_meta.color = "blue";
+	machine_border.entities.push({ type: "line", origin: [0, 0], end: [machine_parameters.machine_extents.x, 0], meta: render.copy_obj(border_meta)});
+	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, 0], end: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], meta: render.copy_obj(border_meta)});
+	machine_border.entities.push({ type: "line", origin: [machine_parameters.machine_extents.x, machine_parameters.machine_extents.y], end: [0, machine_parameters.machine_extents.y], meta: render.copy_obj(border_meta)});
+	machine_border.entities.push({ type: "line", origin: [0, machine_parameters.machine_extents.y], end: [0, 0], meta: render.copy_obj(border_meta)});
 	render.Stack.push(machine_border);
 
 	animate();

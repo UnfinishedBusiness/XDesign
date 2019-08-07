@@ -37,80 +37,20 @@
   <div id="terminal"></div>
   <pre id="editor"></pre>
   <body>
-    <div id="DRO_Border">
-      <section id="X_WCS_Label">X</section>
-      <section id="X_MCS_Label">ABS</section>
-      <section id="Y_WCS_Label">Y</section>
-      <section id="Y_MCS_Label">ABS</section>
-      <section id="X_MCS_POS">0.0000</section>
-      <section id="Y_MCS_POS">0.0000</section>
-      <section id="X_WCS_POS">0.0000</section>
-      <section id="Y_WCS_POS">0.0000</section>
-      <section id="FEED_Label">FEED</section>
-      <section id="FEED_Value">0.00</section>
-      <section id="VEL_Label">VEL</section>
-      <section id="VEL_Value">0.00</section>
-      <section id="STATUS_Label">STATUS</section>
-      <section id="STATUS_Value">STOP</section>
-      <section id="UNITS_Label">UNITS</section>
-      <section id="UNITS_Value">Inch</section>
-      <section id="ARC_Label">ARC</section>
-      <section id="ARC_Value">0.0V</section>
-      <section id="SET_Label">SET</section>
-      <section id="SET_Value">0.0V</section>
-      <section id="THC_Label">THC</section>
-      <section id="THC_Value">OFF</section>
-      <input id="X_Set" class="button" type="button" value="X=0" onclick="SetX_Offset();"/>
-      <input id="Y_Set" class="button" type="button" value="Y=0" onclick="SetY_Offset();"/>
-      <input id="Z_Probe" class="button" type="button" value="Z Probe" onclick="Z_Probe();"/>
-      <input id="GoHome" class="button" type="button" value="Go Home" onclick="GoHome();"/>
-      <input id="Start" class="button" type="button" value="Start" onclick="ProgramStart();"/>
-      <input id="Hold" class="button" type="button" value="Hold" onclick="ProgramHold();"/>
-      <input id="Abort" class="button" type="button" value="Abort" onclick="ProgramAbort();"/>
-      <input id="Open" class="button" type="button" value="Open" onclick="OpenGcodeFile();"/>
-    </div>
   
   </body>
 
-  <script>
-  $("#X_WCS_Label").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 290, top: 10});
-  $("#Y_WCS_Label").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 290, top: 70});
-  $("#X_WCS_POS").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 50, top: 10});
-  $("#Y_WCS_POS").css({ 'font-size': 40 }).css({ 'position': 'fixed' }).css({right: 50, top: 70});
-  $("#X_MCS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 260, top: 20});
-  $("#Y_MCS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 260, top: 80});
-  $("#X_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 30});
-  $("#Y_MCS_POS").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 255, top: 90});
-  $("#FEED_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 290, top: 140});
-  $("#FEED_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 260, top: 140});
-  $("#VEL_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 220, top: 140});
-  $("#VEL_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 190, top: 140});
-  $("#STATUS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 140, top: 140});
-  $("#STATUS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 110, top: 140});
-  $("#SET_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 140, top: 130});
-  $("#SET_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 110, top: 130});
-  $("#THC_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 220, top: 130});
-  $("#THC_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 190, top: 130});
-  $("#UNITS_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 60, top: 140});
-  $("#UNITS_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 30, top: 140});
-  $("#ARC_Label").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 60, top: 130});
-  $("#ARC_Value").css({ 'font-size': 8 }).css({ 'position': 'fixed' }).css({right: 30, top: 130});
-  $("#DRO_Border").css({ 'border': '2px solid black' }).css({ 'width': 300 }).css({ 'height': 130 }).css({ 'position': 'fixed' }).css({right: 10, top: 10}).css({ 'padding': '5px 5px 5px 5px' });
-  //$("#FEEDRATE_Percentage").css({ 'position': 'fixed' }).css({right: 15, top: 180});
-  //$("#FEEDRATE_Slider").css({ 'position': 'fixed' }).css({ 'width': 300 }).css({right: 15, top: 200});
-  $("#X_Set").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 270, top: 240});
-  $("#Y_Set").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 210, top: 240});
-  $("#Z_Probe").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 130, top: 240});
-  $("#GoHome").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 50, top: 240});
-  $("#Start").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 270, top: 300});
-  $("#Hold").css({ 'position': 'fixed' }).css({ 'width': 50 }).css({right: 210, top: 300});
-  $("#Abort").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 130, top: 300});
-  $("#Open").css({ 'position': 'fixed' }).css({ 'width': 70 }).css({right: 50, top: 300});
-  $("#Content").css({ 'border': '2px solid black' });
-  </script>
 
   <div id="DRO">
     <div class="big_label">X<span class="pos_value" id="X_POS">0.0000</span><span class="small_label">ABS</span><span class="abs_value" id="X_POS_ABS">0.0000</span></div>
     <div class="big_label">Y<span class="pos_value" id="Y_POS">0.0000</span><span class="small_label">ABS</span><span class="abs_value" id="Y_POS_ABS">0.0000</span></div>
+    <div class="medium_label">STATUS<span class="status_value" id="STATUS">Halt</span><span class="small_label">FEED</span><span class="abs_value" id="FEED_RATE">0.0</span></div>
+    <div class="medium_label">ARC<span class="status_value" id="ARC_VOLTAGE">0.0</span><span class="small_label">SET</span><span class="abs_value" id="SET_VOLTAGE">0.0</span></div>
+    <div class="medium_label">UNITS<span class="status_value" id="UNITS">Inch</span></div>
+    <div class="divider"></div>
+    <div class="button_container"><span onclick="SetX_Offset();" class="button">X=0</span><span onclick="SetY_Offset();"  class="button">Y=0</span></div>
+    <div class="button_container"><span onclick="TextEditor_Show();" class="button">Edit</span><span onclick="MDITerminal_Show();"  class="button">MDI</span></div>
+    <div class="button_container"><span onclick="GoHome();"  class="button">Park</span><span onclick="ProgramHold();" class="button">Hold</span></div>
+    <div class="button_container"><span onclick="ProgramStart();" class="button">Run</span><span onclick="ProgramAbort();" class="button">Stop</span></div>
   </div>
 </html>
