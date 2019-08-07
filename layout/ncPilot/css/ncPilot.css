@@ -137,4 +137,10 @@ body {
 }
 #terminal{
   z-index: 100;
+  opacity: 0.8;
+  position: absolute;
+  width: 82%;
+  height: 100%;
+  right: 10px;
+  top: 10px;
 }

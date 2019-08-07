@@ -38,7 +38,7 @@ function MDITerminal_Init()
 	});
   MDITerminal.open(document.getElementById('terminal'));
 	//MDITerminal.toggleFullScreen(true);
-	$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'}).css({'width': "100%"}).css({'height': "100%"});
+	//$("#terminal").css({'opacity': 0.7}).css({'position': 'absolute'}).css({'width': "80%"}).css({'height': "100%"});
 	MDITerminal.fit();
   MDITerminal.write(PS1);
 	MDILineBuffer = "";
@@ -193,6 +193,7 @@ function MotionController_Write(buff)
 	else
 	{
 		SerialTransmissionLog.push("->" + buff);
+		if (SerialTransmissionLog.length > 50) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
 		MotionControlPort.write(buff + "\r\n");
 		WaitingForOkay = true;
 	}
@@ -656,6 +657,7 @@ function SetX_Offset()
 			break;
 		}
 	}
+	MachineParameters_Save(); //This makes the work offset persistant accross session, even if the controller is reset
 }
 function SetY_Offset()
 {
@@ -671,6 +673,7 @@ function SetY_Offset()
 			break;
 		}
 	}
+	MachineParameters_Save(); //This makes the work offset persistant accross session, even if the controller is reset
 }
 function Z_Probe()
 {
@@ -748,10 +751,14 @@ function main()
 	render.mouse_over_check = function() {};
 	render.mouse_click_check = function() {
 		//console.log("Adding way point to: X" + render.mousePosition.x + " Y" + render.mousePosition.y);
+		if (render.mousePosition.x < 0 || render.mousePosition.x > machine_parameters.machine_extents.x || render.mousePosition.y < 0 || render.mousePosition.y > machine_parameters.machine_extents.y )
+		{
+			return; //Don't do anything because we are out of bounds!
+		}
 		render.removePartFromStack("Waypoint");
 		var waypoint = this.newPart("Waypoint");
 		var factor = render.camera.position.z;
-		waypoint.entities.push({ type: "circle", origin: [render.mousePosition.x - (0.010 * factor), render.mousePosition.y + (0.010 * factor)], radius: factor * 0.005, meta: render.copy_obj(render._liveMeta)});
+		waypoint.entities.push({ type: "circle", origin: [render.mousePosition.x, render.mousePosition.y], radius: factor * 0.005, meta: render.copy_obj(render._liveMeta)});
 		waypoint.internal = true;
 		render.Stack.push(waypoint);
 		WayPoint.x = render.mousePosition.x;

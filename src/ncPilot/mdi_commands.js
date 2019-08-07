@@ -12,7 +12,7 @@ var mdi_commands = [
 	{ description: "Close Terminal", cmd: "exit", run: function(args){ MDITerminal_Hide(); ret();} },
 	{ description: "Evaluate math expression", cmd: "eval", run: function(args){ eval_command(args); } },
 	{ description: "Set machine parameters", cmd: "set", run: function(args){ eval_command(args); } },
-	{ description: "Echo data stream in from Motion Controller", cmd: "tail", run: function(args){ tail(args); } },
+	//{ description: "Echo data stream in from Motion Controller", cmd: "tail", run: function(args){ tail(args); } },
 	{ description: "List serial ports available", cmd: "list_ports", run: function(args){ list_ports(); } },
 	{ description: "Dump machine parameters", cmd: "dump_parameters", run: function(args){ dump_parameters(); } },
 	{ description: "Connect to serial port", cmd: "connect", run: function(args){ MotionController_Init(); ret(); } },
@@ -198,7 +198,8 @@ function MDITerminal_Eval(cmd_buffer)
 	//If we didn't find a command in the command stack, we must be meant for the motion controller
 	if (MotionControlPort != undefined)
 	{
-		MotionController_Write(cmd_buffer);
+		//MotionController_Write(cmd_buffer);
+		MotionControlPort.write(cmd_buffer + "\r\n");
 		command_history.push(cmd_buffer);
 		command_history_counter = 0;
 		ret();
