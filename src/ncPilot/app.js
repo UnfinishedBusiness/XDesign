@@ -348,7 +348,7 @@ function MotionController_ParseInput(line)
 			if (key == "THC_ARC_VOLTAGE")
 			{
 				var arc_voltage = parseFloat(value).toFixed(1);
-				if (arc_voltage < 0) arc_voltage = 0;
+				if (arc_voltage < 1) arc_voltage = 0;
 				$("#ARC_VOLTAGE").html(arc_voltage + "V");
 			}
 			if (key == "UNITS")
