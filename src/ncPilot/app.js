@@ -187,7 +187,7 @@ function MotionController_Write(buff)
 		//console.log("Caught empty line!");
 		return;
 	}
-	if (WaitingForOkay == true)
+	if (WaitingForOkay == true) //If we are waiting for an okay signal, push it to the send stack and send it after we recieve the okay signal
 	{
 		MotionControllerStack.push(buff);
 	}
@@ -213,11 +213,14 @@ function MotionController_RecievedOK()
 	{
 		var send_line = WorkOffsetTransformation(send_line);
 		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
-		SerialTransmissionLog.push("->" + send_line);
-		MotionControlPort.write(send_line + "\n");
 		if (send_line.includes("M30"))
 		{
 			ProgramUploaded = false; //We can press start again after the program finishes!
+		}
+		else //Don't send M30 to controller
+		{
+			SerialTransmissionLog.push("->" + send_line);
+			MotionControlPort.write(send_line + "\n");
 		}
 	}
 }
