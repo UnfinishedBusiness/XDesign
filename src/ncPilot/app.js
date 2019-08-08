@@ -21,6 +21,7 @@ var MotionControllerStack = [];
 var AltKeyDown = false;
 
 var SerialTransmissionLog = [];
+var SerialTransmissionLogSize = 50;
 
 var ProgramHoldFlag = false;
 var ProgramUploaded = false;
@@ -192,9 +193,10 @@ function MotionController_Write(buff)
 	}
 	else
 	{
+		var send_line = WorkOffsetTransformation(buff);
+		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
 		SerialTransmissionLog.push("->" + buff);
-		if (SerialTransmissionLog.length > 50) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
-		MotionControlPort.write(buff + "\r\n");
+		MotionControlPort.write(send_line + "\r\n");
 		WaitingForOkay = true;
 	}
 }
@@ -209,28 +211,8 @@ function MotionController_RecievedOK()
 	if (send_line == undefined) return;
 	if (ProgramHoldFlag == false)
 	{
-		if (send_line.includes("G0") || send_line.includes("G1"))
-		{
-			var split = send_line.split(" ");
-			for (var x = 0; x < split.length; x++)
-			{
-				if (split[x].includes("X"))
-				{
-					var newX = parseFloat(split[x].substring(1));
-					newX += machine_parameters.WorkOffset.x;
-					split[x] = "X" + newX.toFixed(5);
-				}
-				if (split[x].includes("Y"))
-				{
-					var newY = parseFloat(split[x].substring(1));
-					newY += machine_parameters.WorkOffset.y;
-					split[x] = "Y" + newY.toFixed(5);
-				}
-			}
-			//console.log("Before Work Offset: " + send_line);
-			send_line = split.join(" ");
-			//console.log("After Work Offset: " + send_line);
-		}
+		var send_line = WorkOffsetTransformation(send_line);
+		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
 		SerialTransmissionLog.push("->" + send_line);
 		MotionControlPort.write(send_line + "\n");
 		if (send_line.includes("M30"))
@@ -238,6 +220,32 @@ function MotionController_RecievedOK()
 			ProgramUploaded = false; //We can press start again after the program finishes!
 		}
 	}
+}
+function WorkOffsetTransformation(send_line)
+{
+	if (send_line.includes("G0") || send_line.includes("G1"))
+	{
+		var split = send_line.split(" ");
+		for (var x = 0; x < split.length; x++)
+		{
+			if (split[x].includes("X"))
+			{
+				var newX = parseFloat(split[x].substring(1));
+				newX += machine_parameters.WorkOffset.x;
+				split[x] = "X" + newX.toFixed(5);
+			}
+			if (split[x].includes("Y"))
+			{
+				var newY = parseFloat(split[x].substring(1));
+				newY += machine_parameters.WorkOffset.y;
+				split[x] = "Y" + newY.toFixed(5);
+			}
+		}
+		console.log("Before Work Offset: " + send_line);
+		send_line = split.join(" ");
+		console.log("After Work Offset: " + send_line);
+	}
+	return send_line;
 }
 function CreateMenu()
 {
@@ -286,7 +294,11 @@ function MotionController_Checksum(data)
 function MotionController_ParseInput(line)
 {
 	//DRO: X_MCS=9.514 Y_MCS=0.000 Z_MCS=0.000 X_WO=0.000 Y_WO=0.000 Z_WO=0.000 FEEDRATE=59.0 VELOCITY=291.3 THC_SET_VOLTAGE=0.00 THC_ARC_VOLTAGE=1099.57 UNITS=MM STATUS=RUN
-	SerialTransmissionLog.push("<-" + line);
+	if (line.includes("DRO:") == false)
+	{
+		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
+		SerialTransmissionLog.push("<-" + line);
+	}
 	if (line.includes("ok"))
 	{
 		MovesOnStack = parseFloat(line.split(":")[1]);
@@ -328,11 +340,13 @@ function MotionController_ParseInput(line)
 			}
 			if (key == "THC_SET_VOLTAGE")
 			{
-				$("#SET_VOLTAGE").html(parseFloat(value).toFixed(1));
+				$("#SET_VOLTAGE").html(parseFloat(value).toFixed(1) + "V");
 			}
 			if (key == "THC_ARC_VOLTAGE")
 			{
-				$("#ARC_VOLTAGE").html(parseFloat(value).toFixed(1));
+				var arc_voltage = parseFloat(value).toFixed(1);
+				if (arc_voltage < 0) arc_voltage = 0;
+				$("#ARC_VOLTAGE").html(parseFloat(value).toFixed(1) + "V");
 			}
 			if (key == "UNITS")
 			{
@@ -573,6 +587,8 @@ function KeyDownHandler(e)
 				e.preventDefault();
 				//There is a waypoint set. Rapid to it and clear it
 				render.removePartFromStack("Waypoint");
+				WayPoint.x -= machine_parameters.WorkOffset.x;
+				WayPoint.y -= machine_parameters.WorkOffset.y;
 				MotionController_Write("G0 X" + WayPoint.x.toFixed(5) + " Y" + WayPoint.y.toFixed(5));
 				WayPoint = {x: 0, y: 0};
 				
@@ -675,9 +691,13 @@ function SetY_Offset()
 	}
 	MachineParameters_Save(); //This makes the work offset persistant accross session, even if the controller is reset
 }
-function Z_Probe()
+function ProbeZ()
 {
-	//MotionController_Write("M2100 S0");
+	MotionController_Write("probe_z");
+}
+function GoWorkPos()
+{
+  	MotionController_Write("G0 X0.00 Y0.00");
 }
 function GoHome()
 {
@@ -765,6 +785,24 @@ function main()
 		WayPoint.y = render.mousePosition.y;
 	};
 	render.mouse_drag_check = function() {};
+
+
+	window.setInterval(function(){
+		if (MotionControlPort == null)
+		{
+			$("#not_connected_banner").show();
+			MotionController_Init();
+		}
+		else if (MotionControlPort.isOpen == false)
+		{
+			$("#not_connected_banner").show();
+			MotionController_Init();
+		}
+		else if (MotionControlPort.isOpen == true)
+		{
+			$("#not_connected_banner").hide();
+		}
+	}, 1000);
 }
 $( document ).ready(function() {
     main();

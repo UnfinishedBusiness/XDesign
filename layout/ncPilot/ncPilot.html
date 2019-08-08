@@ -39,7 +39,7 @@
   <body>
   
   </body>
-
+  <div id="not_connected_banner">Controller Not Connected!</div>
 
   <div id="DRO">
     <div class="big_label">X<span class="pos_value" id="X_POS">0.0000</span><span class="small_label">ABS</span><span class="abs_value" id="X_POS_ABS">0.0000</span></div>
@@ -51,6 +51,7 @@
     <div class="button_container"><span onclick="SetX_Offset();" class="button">X=0</span><span onclick="SetY_Offset();"  class="button">Y=0</span></div>
     <div class="button_container"><span onclick="TextEditor_Show();" class="button">Edit</span><span onclick="MDITerminal_Show();"  class="button">MDI</span></div>
     <div class="button_container"><span onclick="GoHome();"  class="button">Park</span><span onclick="ProgramHold();" class="button">Hold</span></div>
+    <div class="button_container"><span onclick="GoWorkPos();"  class="button">WPos</span><span onclick="ProbeZ();" class="button">Touch</span></div>
     <div class="button_container"><span onclick="ProgramStart();" class="button">Run</span><span onclick="ProgramAbort();" class="button">Stop</span></div>
   </div>
 </html>

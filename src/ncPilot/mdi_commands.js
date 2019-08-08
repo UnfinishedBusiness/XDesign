@@ -159,10 +159,7 @@ function dmesg(args)
 
 	for (var x = 0; x < SerialTransmissionLog.length; x++)
 	{
-		if (!SerialTransmissionLog[x].includes("DRO"))
-		{
-			printf(SerialTransmissionLog[x] + "\n\r");
-		}
+		printf("(" + x + ") " + SerialTransmissionLog[x] + "\n\r");
 	}
 	ret();
 }
@@ -199,6 +196,8 @@ function MDITerminal_Eval(cmd_buffer)
 	if (MotionControlPort != undefined)
 	{
 		//MotionController_Write(cmd_buffer);
+		cmd_buffer = WorkOffsetTransformation(cmd_buffer);
+		SerialTransmissionLog.push("MDI-> " + cmd_buffer);
 		MotionControlPort.write(cmd_buffer + "\r\n");
 		command_history.push(cmd_buffer);
 		command_history_counter = 0;
