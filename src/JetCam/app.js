@@ -10,8 +10,6 @@ let navigation;
 let fonts;
 let render = new ProfileRender();
 
-
-
 const Workbench = "JetCam";
 var CurrentFile = null;
 
@@ -215,28 +213,79 @@ function CreateMenu()
 }
 function build_tree()
 {
-  $(function () {
-    // 6 create an instance when the DOM is ready
-    $('#jstree').jstree();
-    // 7 bind to events triggered on the tree
-    $('#jstree').on("changed.jstree", function (e, data) {
-      console.log(data.selected);
-    });
-    // 8 interact with the tree - either way is OK
-    $('button').on('click', function () {
-      $('#jstree').jstree(true).select_node('child_node_1');
-      $('#jstree').jstree('select_node', 'child_node_1');
-      $.jstree.reference('#jstree').select_node('child_node_1');
-    });
-  });
+	$("#parts_tree").bind('ready.jstree', function(event, data) {
+		var $tree = $(this);
+		$($tree.jstree().get_json($tree, {
+			flat: true
+		  }))
+		  .each(function(index, value) {
+			var node = $("#parts_tree").jstree().get_node(this.id);
+			var lvl = node.parents.length;
+			var idx = index;
+			//console.log('node index = ' + idx + ' level = ' + lvl);
+			//console.log(node);
+			$("#" + node.id).css({ color: "#9CA4B4"});
+		  });
+	});
+	$('#parts_tree').jstree({
+		'core' : {
+			'check_callback': true,
+			'data': [{
+                "id": "p_1",
+                    "text": "Base Directory",
+                    "state": {
+                    "opened": true
+                },
+                    "children": [{
+                    "text": "Sub 1",
+                        "id": "sub_1"
+                }]
+            }],
+			"themes" : {
+				"dots" : false, // no connecting dots between dots
+				"icons" : false,
+			  }
+		},
+        'checkbox': {
+            three_state: false,
+            cascade: 'up'
+		},
+        'plugins': ["checkbox"]
+	});
+}
+function add_part(name)
+{
+	var parent = '#';
+	var node = { id:name,text:name};
+	$('#parts_tree').jstree().create_node(parent, node, 'last');
+}
+function delete_part(name)
+{
+	$('#parts_tree').jstree().delete_node("#" + name);
+}
+function style_tree()
+{
+	var tree_data = $("#parts_tree").jstree().get_json();
+	for (var x = 0; x < tree_data.length; x++)
+	{
+		//console.log(tree_data[x]);
+		$("#" + tree_data[x].id).css({color: "#9CA4B4"});
+		if (tree_data[x].children.length > 0)
+		{
+			for (var y = 0; y < tree_data[x].children.length; y++)
+			{
+				$("#" + tree_data[x].children[y].id).css({color: "#9CA4B4"});
+			}
+		}
+	}
 }
 function main()
 {
 	CreateMenu();
 	build_tree();
-	render._renderHeight = window.innerHeight - 50;
+	//render._renderHeight = window.innerHeight - 50;
 	render._renderWidth = window.innerWidth - 200;
-	render._renderTopMargin = 50;
+	//render._renderTopMargin = 50;
 	render._renderLeftMargin = 200;
 	render.init();
 	animate();
@@ -253,3 +302,6 @@ function main()
 $( document ).ready(function() {
     main();
 });
+setInterval(function(){
+	style_tree();
+}, 100);

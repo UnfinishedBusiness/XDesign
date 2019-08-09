@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <link rel="stylesheet" href="../global/tree_view/style.css">
   <link rel="stylesheet" href="css/JetCam.css">
-  <link rel="stylesheet" href="../global/tree_view/style.min.css">
   <meta charset="UTF-8">
   <title>CAM</title>
   <script src="../../lib/three.js"></script>
@@ -12,16 +12,9 @@
   <script src="../../src/JetCam/app.js"></script>
   <script src="../../lib/jstree.js"></script>
 
-  <PartTree id="jstree">
-    <!-- in this example the tree is populated from inline HTML -->
-    <ul>
-      <li>Test Part
-        <ul>
-          <li id="child_node_1">Test Part (1)</li>
-          <li>Child node 2</li>
-        </ul>
-      </li>
-      <li>Another Part</li>
-    </ul>
-  </PartTree>
+  <div id="left_drawer">
+    <div class="divider"></div>
+    <PartTree id="parts_tree"></PartTree>
+  </div>
+  
 </html>
