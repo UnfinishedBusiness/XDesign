@@ -4,7 +4,9 @@
   "description": "XDesign",
   "main": "main.js",
   "scripts": {
-    "start": "electron ./src/main.js"
+    "start": "electron ./src/main.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "repository": "https://github.com/UnfinishedBusiness/XDesign",
   "keywords": [
@@ -14,6 +16,7 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^5.0.6",
+    "electron-builder": "^21.2.0",
     "electron-rebuild": "^1.8.5"
   },
   "dependencies": {
@@ -27,5 +30,11 @@
     "simplify-js": "^1.2.3",
     "tree-view": "^2.2.0",
     "xterm": "^3.14.5"
+  },
+  "build": {
+    "appId": "XDesign",
+    "mac": {
+      "category": "Design"
+    }
   }
 }

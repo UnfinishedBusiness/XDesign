@@ -1,0 +1,7 @@
+directories:
+  output: dist
+  buildResources: build
+appId: XDesign
+mac:
+  category: Design
+electronVersion: 5.0.6
