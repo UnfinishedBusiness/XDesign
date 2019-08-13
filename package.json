@@ -5,7 +5,8 @@
   "description": "XDesign",
   "main": "./src/main.js",
   "scripts": {
-    "start": "electron ./src/main.js"
+    "start": "electron ./src/main.js",
+    "postinstall": "./node_modules/.bin/electron-rebuild"
   },
   "repository": "https://github.com/UnfinishedBusiness/XDesign",
   "keywords": [
