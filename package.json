@@ -1,12 +1,11 @@
 {
   "name": "XDesign",
-  "version": "1.0.0",
+  "productName": "Xmotion Design and Machine Control",
+  "version": "0.0.1",
   "description": "XDesign",
-  "main": "main.js",
+  "main": "./src/main.js",
   "scripts": {
-    "start": "electron ./src/main.js",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "start": "electron ./src/main.js"
   },
   "repository": "https://github.com/UnfinishedBusiness/XDesign",
   "keywords": [
@@ -16,7 +15,6 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^5.0.6",
-    "electron-builder": "^21.2.0",
     "electron-rebuild": "^1.8.5"
   },
   "dependencies": {
