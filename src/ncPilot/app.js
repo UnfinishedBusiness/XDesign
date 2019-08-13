@@ -174,7 +174,16 @@ function MotionController_Init()
 				});
 				// The open event is always emitted
 				MotionControlPort.on('open', function() {
-					
+					if (MotionControlPort != null)
+					{
+						MotionControlPort.write("invert_dir 0 " + machine_parameters.machine_axis_invert.x + "\n");
+						MotionControlPort.write("invert_dir 1 " + machine_parameters.machine_axis_invert.y1 + "\n");
+						MotionControlPort.write("invert_dir 2 " + machine_parameters.machine_axis_invert.y2 + "\n");
+						MotionControlPort.write("invert_dir 3 " + machine_parameters.machine_axis_invert.z + "\n");
+						MotionControlPort.write("set_scale 0 " + machine_parameters.machine_axis_scale.x + "\n");
+						MotionControlPort.write("set_scale 1 " + machine_parameters.machine_axis_scale.y + "\n");
+						MotionControlPort.write("set_scale 2 " + machine_parameters.machine_axis_scale.z + "\n");
+					}
 				});
 			}
 	  });
