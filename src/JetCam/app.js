@@ -138,10 +138,11 @@ function ImportDrawing()
 										alert("An error ocurred reading the file :" + err.message);
 										return;
 								}
-                var path = require("path");
-                var filepath = item;
-                var name = path.parse(filepath).name;
+								var path = require("path");
+								var filepath = item;
+								var name = path.parse(filepath).name;
 								ParseDXF(data, name);
+								add_part(name, true);
 							});
 						}
 					});
@@ -230,17 +231,7 @@ function build_tree()
 	$('#parts_tree').jstree({
 		'core' : {
 			'check_callback': true,
-			'data': [{
-                "id": "p_1",
-                    "text": "Base Directory",
-                    "state": {
-                    "opened": true
-                },
-                    "children": [{
-                    "text": "Sub 1",
-                        "id": "sub_1"
-                }]
-            }],
+			'data': [],
 			"themes" : {
 				"dots" : false, // no connecting dots between dots
 				"icons" : false,
@@ -253,14 +244,16 @@ function build_tree()
         'plugins': ["checkbox"]
 	});
 }
-function add_part(name)
+function add_part(name, state)
 {
+	name = name.replace(/ /g,"_");
 	var parent = '#';
-	var node = { id:name,text:name};
+	var node = { id:name,text:name, "state": { "selected": state }};
 	$('#parts_tree').jstree().create_node(parent, node, 'last');
 }
 function delete_part(name)
 {
+	name = name.replace(/ /g,"_");
 	$('#parts_tree').jstree().delete_node("#" + name);
 }
 function style_tree()
