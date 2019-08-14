@@ -1,7 +1,6 @@
 const electron = require('electron');
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-var MotionControlPort;
 var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
@@ -12,6 +11,8 @@ let render = new ProfileRender();
 
 const Workbench = "JetCam";
 var CurrentFile = null;
+
+var job_options = { material_size: { width: 48, height: 96 } };
 
 function ParseDXF(data, part_name)
 {
@@ -281,15 +282,43 @@ function main()
 	//render._renderTopMargin = 50;
 	render._renderLeftMargin = 200;
 	render.init();
+	var job_material = render.newPart("job_material");
+	job_material.internal = true;
+	var border_meta = render.copy_obj(render._crosshairMeta);
+	border_meta.color = "red";
+	job_material.entities.push({ type: "line", origin: [0, 0], end: [job_options.material_size.width, 0], meta: render.copy_obj(border_meta)});
+	job_material.entities.push({ type: "line", origin: [job_options.material_size.width, 0], end: [job_options.material_size.width, job_options.material_size.height], meta: render.copy_obj(border_meta)});
+	job_material.entities.push({ type: "line", origin: [job_options.material_size.width, job_options.material_size.height], end: [0, job_options.material_size.height], meta: render.copy_obj(border_meta)});
+	job_material.entities.push({ type: "line", origin: [0, job_options.material_size.height], end: [0, 0], meta: render.copy_obj(border_meta)});
+	render.Stack.push(job_material);
 	animate();
-	render.mouse_over_check = function() {};
+	//render.mouse_over_check = function() {};
 	render.mouse_click_check = function() {};
 	render.mouse_drag_check = function(drag)
 	{
 		//console.log(drag);
-		render.Stack[1].offset[0] += drag.relative.x;
-		render.Stack[1].offset[1] += drag.relative.y;
-		render.Stack[1].updateRender = true;
+		var part_to_move = 1000;
+		for (var x = 0; x < render.Stack.length; x++)
+      	{
+			var part = render.Stack[x];
+			if (part.hidden == false)
+			{
+				for (var y = 0; y < part.entities.length; y++)
+				{
+					var entity = part.entities[y];
+					if (entity.meta.mouse_over == true)
+					{
+						part_to_move = x;
+					}
+				}
+			}
+		}
+		if (part_to_move < 1000 && part_to_move < render.Stack.length)
+		{
+			render.Stack[part_to_move].offset[0] += drag.relative.x;
+			render.Stack[part_to_move].offset[1] += drag.relative.y;
+			render.Stack[part_to_move].updateRender = true;
+		}
 	};
 }
 $( document ).ready(function() {
