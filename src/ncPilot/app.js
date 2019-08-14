@@ -183,6 +183,7 @@ function MotionController_Init()
 						MotionControlPort.write("set_scale 0 " + machine_parameters.machine_axis_scale.x + "\n");
 						MotionControlPort.write("set_scale 1 " + machine_parameters.machine_axis_scale.y + "\n");
 						MotionControlPort.write("set_scale 2 " + machine_parameters.machine_axis_scale.z + "\n");
+						MotionControlPort.write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup + "\n");
 					}
 				});
 			}

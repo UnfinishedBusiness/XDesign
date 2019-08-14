@@ -3,6 +3,7 @@ var machine_parameters = {
   machine_extents: { x: 45.5, y: 45.5 },
   machine_axis_invert: { x: 0, y1: 1, y2: 0, z: 0 },
   machine_axis_scale: { x: 1034.5, y: 1034.5, z: 1000 },
+  machine_torch_config: { z_rapid_feed: 25, z_probe_feed: 20, floating_head_takeup: 0.1 },
   MachinePosition: {x: 0, y: 0},
   WorkOffset: {x: 0, y: 0},
 };
