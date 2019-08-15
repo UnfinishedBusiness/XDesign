@@ -273,6 +273,60 @@ function style_tree()
 		}
 	}
 }
+function chainify_part(part_index)
+{
+	var chain_tolorance = 0.003;
+	if (render.Stack.length > part_index) //part_index exists
+	{
+		var random_entities = render.copy_obj(render.Stack[part_index].entities);
+		var contours = [];
+		var current_path = [];
+		var get_distance = function(p1, p2)
+		{
+			return Math.sqrt( Math.pow((p1.x-p2.x), 2) + Math.pow((p1.y-p2.y), 2));
+		}
+		var get_next_contour_point = function(point)
+		{
+			for (var x = 0; x < random_entities.length; x++)
+			{
+				if (random_entities[x].type == "line")
+				{
+					if (get_distance(point, random_entities[x].origin) < chain_tolorance)
+					{
+						current_path.push({ x: random_entities[x].end[0], y: random_entities[x].end[1] });
+						random_entities.splice(x, 1);
+						return true;
+					}
+					else if (get_distance(point, random_entities[x].end) < chain_tolorance)
+					{
+						current_path.push({ x: random_entities[x].origin[0], y: random_entities[x].origin[1] });
+						random_entities.splice(x, 1);
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		while(random_entities.length > 0) //This is iterating for each contour
+		{
+			current_path = [];
+			if (random_entities[0].type == "line")
+			{
+				current_path.push({x: random_entities[0].origin[0], y: random_entities[0].origin[1]});
+				current_path.push({x: random_entities[0].end[0], y: random_entities[0].end[1]});
+			}
+			else if (random_entities[0].type == "arc")
+			{
+
+			}
+			random_entities.pop(); //Remove the first entity that was used to prime this contour
+			while(get_next_contour_point(current_path[current_path.length - 1]) != false);
+			//If the end point and the start points are the same, we are a closed path
+			contours.push(current_path);
+		}
+		return contours;
+	}
+}
 function main()
 {
 	CreateMenu();
