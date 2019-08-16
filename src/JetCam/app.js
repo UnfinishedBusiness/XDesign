@@ -275,7 +275,7 @@ function style_tree()
 }
 function chainify_part(part_index)
 {
-	var chain_tolorance = 0.003;
+	var chain_tolorance = 0.005;
 	if (render.Stack.length > part_index) //part_index exists
 	{
 		var random_entities = render.copy_obj(render.Stack[part_index].entities);
@@ -285,21 +285,43 @@ function chainify_part(part_index)
 		{
 			return Math.sqrt( Math.pow((p1.x-p2.x), 2) + Math.pow((p1.y-p2.y), 2));
 		}
-		var get_next_contour_point = function(point)
+		var get_next_contour_point = function(current_path)
 		{
+			var point = current_path[current_path.length - 1];
 			for (var x = 0; x < random_entities.length; x++)
 			{
 				if (random_entities[x].type == "line")
 				{
-					if (get_distance(point, random_entities[x].origin) < chain_tolorance)
+					if (get_distance(point, {x: random_entities[x].origin[0], y: random_entities[x].origin[1]}) < chain_tolorance)
 					{
+						//console.log("Found line match! " + x);
 						current_path.push({ x: random_entities[x].end[0], y: random_entities[x].end[1] });
 						random_entities.splice(x, 1);
 						return true;
 					}
-					else if (get_distance(point, random_entities[x].end) < chain_tolorance)
+					else if (get_distance(point, {x: random_entities[x].end[0], y: random_entities[x].end[1]}) < chain_tolorance)
 					{
+						//console.log("Found line match! " + x);
 						current_path.push({ x: random_entities[x].origin[0], y: random_entities[x].origin[1] });
+						random_entities.splice(x, 1);
+						return true;
+					}
+				}
+				if (random_entities[x].type == "arc")
+				{
+					var start_line = render.geometry.get_line_at_angle({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].startAngle, random_entities[x].radius);
+					var end_line = render.geometry.get_line_at_angle({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].endAngle, random_entities[x].radius);
+					if (get_distance(point, {x: start_line.end[0], y: start_line.end[1]}) < chain_tolorance)
+					{
+						//console.log("Found arc match! " + x);
+						current_path.push({x: end_line.end[0], y: end_line.end[1]});
+						random_entities.splice(x, 1);
+						return true;
+					}
+					else if (get_distance(point, {x: end_line.end[0], y: end_line.end[1]}) < chain_tolorance)
+					{
+						//console.log("Found arc match! " + x);
+						current_path.push({x: start_line.end[0], y: start_line.end[1]});
 						random_entities.splice(x, 1);
 						return true;
 					}
@@ -314,15 +336,46 @@ function chainify_part(part_index)
 			{
 				current_path.push({x: random_entities[0].origin[0], y: random_entities[0].origin[1]});
 				current_path.push({x: random_entities[0].end[0], y: random_entities[0].end[1]});
+				random_entities.splice(x, 1);
+				//console.log("Priming contour with line!" + contours.length);
 			}
 			else if (random_entities[0].type == "arc")
 			{
-
+				var start_line = render.geometry.get_line_at_angle({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].startAngle, random_entities[0].radius);
+				var end_line = render.geometry.get_line_at_angle({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].endAngle, random_entities[0].radius);
+				current_path.push({x: start_line.end[0], y: start_line.end[1]});
+				current_path.push({x: end_line.end[0], y: end_line.end[1]});
+				random_entities.splice(x, 1);
+				//console.log("Priming contour with arc!" + contours.length);
 			}
-			random_entities.pop(); //Remove the first entity that was used to prime this contour
-			while(get_next_contour_point(current_path[current_path.length - 1]) != false);
+			while(get_next_contour_point(current_path) == true);
 			//If the end point and the start points are the same, we are a closed path
-			contours.push(current_path);
+			if (current_path.length > 2)
+			{
+				contours.push(current_path);
+			}
+			else
+			{
+				//console.log("Emmitting path without any other points!");
+			}
+		}
+
+		/*
+			Render the contours to ensure the algorythim is working right
+		*/
+		render.Stack[part_index].hidden = true;
+		render.Stack[part_index].updateRender = true;
+
+		for (var x = 0; x < contours.length; x++)
+		{
+			var imported_stack = [];
+			for (var y = 1; y < contours[x].length; y++)
+			{
+				imported_stack.push({ type: "line", origin: [contours[x][y-1].x, contours[x][y-1].y], end: [contours[x][y].x, contours[x][y].y], meta: render.copy_obj(render._crosshairMeta) });
+			}
+			var part = render.newPart("chainify-" + x);
+			part.entities = imported_stack;
+			render.Stack.push(part);
 		}
 		return contours;
 	}
