@@ -5,6 +5,8 @@ var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
+let ClipperLib = require("../../lib/clipper.js");
+const simplify = require("simplify-js");
 let navigation;
 let fonts;
 let render = new ProfileRender();
@@ -273,6 +275,57 @@ function style_tree()
 		}
 	}
 }
+function offset_contours(contours, distance, smoothing)
+{
+	//Clipper does not support floating point math, so we scale!
+	var scale = 10000;
+	var co = new ClipperLib.ClipperOffset(); // constructor
+	var offsetted_paths = new ClipperLib.Paths(); // empty solution
+	var formatted_paths = [];
+	for (var x = 0; x < contours.length; x++) //Iterate contours
+	{
+		var path = [];
+		for (var i = 0; i < contours[x].length; i++)
+		{
+			path.push({X: contours[x][i].x * scale, Y: contours[x][i].y * scale});
+		}
+		formatted_paths.push(path);
+	}
+	co.Clear();
+    co.AddPaths(formatted_paths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+    co.ArcTolerance = 0.020;
+	co.Execute(offsetted_paths, distance * scale);
+	var normalized_offset = [];
+	for (var x = 0; x < offsetted_paths.length; x++)
+	{
+		var path = [];
+		var simplified_path = [];
+		for (var i = 0; i < offsetted_paths[x].length; i++)
+		{
+			path.push({x: offsetted_paths[x][i].X / scale, y: offsetted_paths[x][i].Y / scale});
+		}
+		path.push(path[0]); //Close the contour
+		simplified_path = simplify(path, smoothing, true);
+		normalized_offset.push(simplified_path);
+	}
+
+	/*
+		Render the contours to ensure the algorythim is working right
+	*/
+	for (var x = 0; x < normalized_offset.length; x++)
+	{
+		var imported_stack = [];
+		for (var y = 1; y < normalized_offset[x].length; y++)
+		{
+			imported_stack.push({ type: "line", origin: [normalized_offset[x][y-1].x, normalized_offset[x][y-1].y], end: [normalized_offset[x][y].x, normalized_offset[x][y].y], meta: render.copy_obj(render._crosshairMeta) });
+		}
+		var part = render.newPart("offset-" + x);
+		part.entities = imported_stack;
+		render.Stack.push(part);
+	}
+
+	return normalized_offset;
+}
 function chainify_part(part_index)
 {
 	var chain_tolorance = 0.005;
@@ -371,7 +424,7 @@ function chainify_part(part_index)
 				find_chain = true;
 				current_path.push({x: random_entities[0].origin[0], y: random_entities[0].origin[1]});
 				current_path.push({x: random_entities[0].end[0], y: random_entities[0].end[1]});
-				random_entities.splice(x, 1);
+				random_entities.splice(0, 1);
 				//console.log("Priming contour with line!" + contours.length);
 			}
 			else if (random_entities[0].type == "arc")
@@ -382,7 +435,7 @@ function chainify_part(part_index)
 				current_path.push({x: start_line.end[0], y: start_line.end[1]});
 				console.log("(Entity Priming ) Start Angle: " + random_entities[0].startAngle + " End Angle: " + random_entities[0].endAngle);
 				current_path.push({x: end_line.end[0], y: end_line.end[1]});
-				random_entities.splice(x, 1);
+				random_entities.splice(0, 1);
 				//console.log("Priming contour with arc!" + contours.length);
 			}
 			else if (random_entities[0].type == "circle")
@@ -419,7 +472,7 @@ function chainify_part(part_index)
 		/*
 			Render the contours to ensure the algorythim is working right
 		*/
-		render.Stack[part_index].hidden = true;
+		/*render.Stack[part_index].hidden = true;
 		render.Stack[part_index].updateRender = true;
 
 		for (var x = 0; x < contours.length; x++)
@@ -432,7 +485,7 @@ function chainify_part(part_index)
 			var part = render.newPart("chainify-" + x);
 			part.entities = imported_stack;
 			render.Stack.push(part);
-		}
+		}*/
 		return contours;
 	}
 }
