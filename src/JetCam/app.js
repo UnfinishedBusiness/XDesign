@@ -332,6 +332,16 @@ function chainify_part(part_index)
 	if (render.Stack.length > part_index) //part_index exists
 	{
 		var random_entities = render.copy_obj(render.Stack[part_index].entities);
+		for (var x = 0; x < random_entities.length; x++)
+		{
+			random_entities[x].origin[0] += render.Stack[part_index].offset[0];
+			random_entities[x].origin[1] += render.Stack[part_index].offset[1];
+			if (random_entities[x].type == "line")
+			{
+				random_entities[x].end[0] += render.Stack[part_index].offset[0];
+				random_entities[x].end[1] += render.Stack[part_index].offset[1];
+			}
+		}
 		var contours = [];
 		var current_path = [];
 		var polarToCartesian = function(centerX, centerY, radius, angleInDegrees) {
@@ -468,7 +478,6 @@ function chainify_part(part_index)
 				//console.log("Emmitting path without any other points!");
 			}
 		}
-
 		/*
 			Render the contours to ensure the algorythim is working right
 		*/

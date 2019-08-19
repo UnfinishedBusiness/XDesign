@@ -1,0 +1,63 @@
+(function ()
+{
+	"use strict";
+    var PostProcessor = {};
+    PostProcessor.version = '0.1';
+    PostProcessor.GcodeLines = [];
+
+	var isNode = false;
+	if (typeof module !== 'undefined' && module.exports)
+	{
+		module.exports = PostProcessor;
+		isNode = true;
+	}
+	else
+	{
+		if (typeof (document) !== "undefined") window.PostProcessor = PostProcessor;
+		else self['PostProcessor'] = PostProcessor;
+	}
+    PostProcessor.init = function()
+    {
+        PostProcessor.GcodeLines = [];
+    }
+    PostProcessor.get_text = function()
+    {
+        //If you need line numbers, this would be a good place to do it!
+        //Also would be a good place to encode with CRC checksum for streaming protocalls
+        return this.GcodeLines.join("\n");
+    }
+    PostProcessor.Header = function()
+    {
+        //Nothing to do here for Xmotion Control
+    }
+    PostProcessor.FireTorch = function(pierce_height, pierce_delay, cut_height)
+    {
+        this.GcodeLines.push("fire_torch " + pierce_height + " " + pierce_delay +  " " + cut_height);
+    }
+    PostProcessor.TorchOff = function()
+    {
+        this.GcodeLines.push("torch_off");
+    }
+    PostProcessor.PostMessage = function(message)
+    {
+        this.GcodeLines.push("post_message " + message);
+    }
+    PostProcessor.SetVoltage = function(voltage)
+    {
+        this.GcodeLines.push("set_voltage " + voltage);
+    }
+    PostProcessor.RapidMove = function(point)
+    {
+        this.GcodeLines.push("G0 X" + point.x + " Y" + point.y);
+    }
+    PostProcessor.LineMove = function(point, feedrate)
+    {
+        this.GcodeLines.push("G1 X" + point.x + " Y" + point.y + " F" + feedrate);
+    }
+    PostProcessor.Footer = function()
+    {
+        this.GcodeLines.push("M30");
+    }
+    
+
+})();
