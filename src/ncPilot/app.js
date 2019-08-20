@@ -18,10 +18,11 @@ const Interpreter = require('gcode-interpreter');
 const Workbench = "ncPilot";
 var WayPoint = { x: 0, y: 0 };
 var MotionControllerStack = [];
+var lastSerialWrite = "";
 var AltKeyDown = false;
 
 var SerialTransmissionLog = [];
-var SerialTransmissionLogSize = 50;
+var SerialTransmissionLogSize = 150;
 
 var ProgramHoldFlag = false;
 var ProgramUploaded = false;
@@ -176,19 +177,25 @@ function MotionController_Init()
 				MotionControlPort.on('open', function() {
 					if (MotionControlPort != null)
 					{
-						MotionControlPort.write("invert_dir 0 " + machine_parameters.machine_axis_invert.x + "\n");
-						MotionControlPort.write("invert_dir 1 " + machine_parameters.machine_axis_invert.y1 + "\n");
-						MotionControlPort.write("invert_dir 2 " + machine_parameters.machine_axis_invert.y2 + "\n");
-						MotionControlPort.write("invert_dir 3 " + machine_parameters.machine_axis_invert.z + "\n");
-						MotionControlPort.write("set_scale 0 " + machine_parameters.machine_axis_scale.x + "\n");
-						MotionControlPort.write("set_scale 1 " + machine_parameters.machine_axis_scale.y + "\n");
-						MotionControlPort.write("set_scale 2 " + machine_parameters.machine_axis_scale.z + "\n");
-						MotionControlPort.write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup + "\n");
+						crc_write("invert_dir 0 " + machine_parameters.machine_axis_invert.x);
+						crc_write("invert_dir 1 " + machine_parameters.machine_axis_invert.y1);
+						crc_write("invert_dir 2 " + machine_parameters.machine_axis_invert.y2);
+						crc_write("invert_dir 3 " + machine_parameters.machine_axis_invert.z);
+						crc_write("set_scale 0 " + machine_parameters.machine_axis_scale.x);
+						crc_write("set_scale 1 " + machine_parameters.machine_axis_scale.y);
+						crc_write("set_scale 2 " + machine_parameters.machine_axis_scale.z);
+						crc_write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup);
 					}
 				});
 			}
 	  });
 	});
+}
+function crc_write(buff)
+{
+	var crc = MotionController_Checksum(buff);
+	MotionControlPort.write(buff + "*" + crc + "\n");
+	lastSerialWrite = buff; //This is resent and logged by read loop if it recieves a crc_fail
 }
 function MotionController_Write(buff)
 {
@@ -206,7 +213,7 @@ function MotionController_Write(buff)
 		var send_line = WorkOffsetTransformation(buff);
 		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
 		SerialTransmissionLog.push("->" + buff);
-		MotionControlPort.write(send_line + "\r\n");
+		crc_write(send_line);
 		WaitingForOkay = true;
 	}
 }
@@ -230,7 +237,7 @@ function MotionController_RecievedOK()
 		else //Don't send M30 to controller
 		{
 			SerialTransmissionLog.push("->" + send_line);
-			MotionControlPort.write(send_line + "\n");
+			crc_write(send_line);
 		}
 	}
 }
@@ -316,6 +323,11 @@ function MotionController_ParseInput(line)
 	{
 		MovesOnStack = parseFloat(line.split(":")[1]);
 		MotionController_RecievedOK();
+	}
+	else if (line.includes("crc_fail"))
+	{
+		SerialTransmissionLog.push("COM_ERROR-> Resending->" + lastSerialWrite);
+		crc_write(lastSerialWrite);
 	}
 	else if (line.includes("DRO:"))
 	{
@@ -719,7 +731,7 @@ function GoHome()
 }
 function ProgramStart()
 {
-	MotionControlPort.write("run\n"); //Make sure we are in a run state
+	crc_write("run"); //Make sure we are in a run state
 	if (ProgramHoldFlag == true)
 	{
 		ProgramHoldFlag = false;
@@ -746,7 +758,7 @@ function ProgramAbort()
 	ProgramHoldFlag = false;
 	MotionControllerStack = [];
 	WaitingForOkay = false;
-	MotionControlPort.write("soft_abort\n");
+	crc_write("soft_abort");
 }
 function animate()
 {

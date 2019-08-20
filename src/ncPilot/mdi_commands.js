@@ -198,7 +198,7 @@ function MDITerminal_Eval(cmd_buffer)
 		//MotionController_Write(cmd_buffer);
 		cmd_buffer = WorkOffsetTransformation(cmd_buffer);
 		SerialTransmissionLog.push("MDI-> " + cmd_buffer);
-		MotionControlPort.write(cmd_buffer + "\r\n");
+		crc_write(cmd_buffer);
 		command_history.push(cmd_buffer);
 		command_history_counter = 0;
 		ret();
