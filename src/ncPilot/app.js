@@ -326,6 +326,7 @@ function MotionController_ParseInput(line)
 	}
 	else if (line.includes("crc_fail"))
 	{
+		if (SerialTransmissionLog.length > SerialTransmissionLogSize) SerialTransmissionLog.shift(); //Remove the top element in the array so we don't keep creating a longer list
 		SerialTransmissionLog.push("COM_ERROR-> Resending->" + lastSerialWrite);
 		crc_write(lastSerialWrite);
 	}
