@@ -21,7 +21,7 @@ var MotionControllerStack = [];
 var AltKeyDown = false;
 
 var SerialTransmissionLog = [];
-var SerialTransmissionLogSize = 50;
+var SerialTransmissionLogSize = 150;
 
 var ProgramHoldFlag = false;
 var ProgramUploaded = false;
