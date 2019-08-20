@@ -5,6 +5,8 @@ var $ = require('jquery');
 var fs = require('fs');
 let DxfParser = require('dxf-parser');
 let DxfWriter = require('dxf-writer');
+let ClipperLib = require("../../lib/clipper.js");
+const simplify = require("simplify-js");
 let navigation;
 let fonts;
 let render = new ProfileRender();
@@ -273,14 +275,98 @@ function style_tree()
 		}
 	}
 }
+function offset_contours(contours, distance, smoothing)
+{
+	//Clipper does not support floating point math, so we scale!
+	var scale = 10000;
+	var co = new ClipperLib.ClipperOffset(); // constructor
+	var offsetted_paths = new ClipperLib.Paths(); // empty solution
+	var formatted_paths = [];
+	for (var x = 0; x < contours.length; x++) //Iterate contours
+	{
+		var path = [];
+		for (var i = 0; i < contours[x].length; i++)
+		{
+			path.push({X: contours[x][i].x * scale, Y: contours[x][i].y * scale});
+		}
+		formatted_paths.push(path);
+	}
+	co.Clear();
+    co.AddPaths(formatted_paths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+    co.ArcTolerance = 0.020;
+	co.Execute(offsetted_paths, distance * scale);
+	var normalized_offset = [];
+	for (var x = 0; x < offsetted_paths.length; x++)
+	{
+		var path = [];
+		var simplified_path = [];
+		for (var i = 0; i < offsetted_paths[x].length; i++)
+		{
+			path.push({x: offsetted_paths[x][i].X / scale, y: offsetted_paths[x][i].Y / scale});
+		}
+		path.push(path[0]); //Close the contour
+		simplified_path = simplify(path, smoothing, true);
+		normalized_offset.push(simplified_path);
+	}
+
+	/*
+		Render the contours to ensure the algorythim is working right
+	*/
+	for (var x = 0; x < normalized_offset.length; x++)
+	{
+		var imported_stack = [];
+		for (var y = 1; y < normalized_offset[x].length; y++)
+		{
+			imported_stack.push({ type: "line", origin: [normalized_offset[x][y-1].x, normalized_offset[x][y-1].y], end: [normalized_offset[x][y].x, normalized_offset[x][y].y], meta: render.copy_obj(render._crosshairMeta) });
+		}
+		var part = render.newPart("offset-" + x);
+		part.entities = imported_stack;
+		render.Stack.push(part);
+	}
+
+	return normalized_offset;
+}
 function chainify_part(part_index)
 {
 	var chain_tolorance = 0.005;
 	if (render.Stack.length > part_index) //part_index exists
 	{
 		var random_entities = render.copy_obj(render.Stack[part_index].entities);
+		for (var x = 0; x < random_entities.length; x++)
+		{
+			random_entities[x].origin[0] += render.Stack[part_index].offset[0];
+			random_entities[x].origin[1] += render.Stack[part_index].offset[1];
+			if (random_entities[x].type == "line")
+			{
+				random_entities[x].end[0] += render.Stack[part_index].offset[0];
+				random_entities[x].end[1] += render.Stack[part_index].offset[1];
+			}
+		}
 		var contours = [];
 		var current_path = [];
+		var polarToCartesian = function(centerX, centerY, radius, angleInDegrees) {
+			var angleInRadians = (angleInDegrees) * Math.PI / 180.0;
+  
+			return {
+				x: centerX + (radius * Math.cos(angleInRadians)),
+				y: centerY + (radius * Math.sin(angleInRadians))
+			};
+		}
+		var get_arc_points = function(origin, radius, startAngle, endAngle)
+		{
+			var points = [];
+			var start = startAngle % 360;
+			var end = endAngle % 360;
+			//console.log("Start Angle: " + start + ", End Angle: " + end);
+			if (start > end) end += 360;
+			var angle_inc = 1;
+			for (var x = start; x <= end; x+= angle_inc)
+			{
+				points.push(polarToCartesian(origin.x, origin.y, radius, x));
+				//console.log("Pushing!");
+			}
+			return points;
+		}
 		var get_distance = function(p1, p2)
 		{
 			return Math.sqrt( Math.pow((p1.x-p2.x), 2) + Math.pow((p1.y-p2.y), 2));
@@ -309,18 +395,28 @@ function chainify_part(part_index)
 				}
 				if (random_entities[x].type == "arc")
 				{
+					//console.log("(Next Point) Start Angle: " + random_entities[x].startAngle + " End Angle: " + random_entities[x].endAngle);
 					var start_line = render.geometry.get_line_at_angle({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].startAngle, random_entities[x].radius);
 					var end_line = render.geometry.get_line_at_angle({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].endAngle, random_entities[x].radius);
 					if (get_distance(point, {x: start_line.end[0], y: start_line.end[1]}) < chain_tolorance)
 					{
-						//console.log("Found arc match! " + x);
+						var points = get_arc_points({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].radius, random_entities[x].startAngle, random_entities[x].endAngle);
+						for (var i = 0; i < points.length; i++)
+						{
+							current_path.push(points[i]);
+						}
 						current_path.push({x: end_line.end[0], y: end_line.end[1]});
 						random_entities.splice(x, 1);
 						return true;
 					}
 					else if (get_distance(point, {x: end_line.end[0], y: end_line.end[1]}) < chain_tolorance)
 					{
-						//console.log("Found arc match! " + x);
+						var points = get_arc_points({x: random_entities[x].origin[0], y: random_entities[x].origin[1]}, random_entities[x].radius, random_entities[x].startAngle, random_entities[x].endAngle);
+						//console.log("Points: " + points.length);
+						for (var i = points.length-1; i > 0; i--)
+						{
+							current_path.push(points[i]);
+						}
 						current_path.push({x: start_line.end[0], y: start_line.end[1]});
 						random_entities.splice(x, 1);
 						return true;
@@ -332,24 +428,47 @@ function chainify_part(part_index)
 		while(random_entities.length > 0) //This is iterating for each contour
 		{
 			current_path = [];
+			var find_chain = false;
 			if (random_entities[0].type == "line")
 			{
+				find_chain = true;
 				current_path.push({x: random_entities[0].origin[0], y: random_entities[0].origin[1]});
 				current_path.push({x: random_entities[0].end[0], y: random_entities[0].end[1]});
-				random_entities.splice(x, 1);
+				random_entities.splice(0, 1);
 				//console.log("Priming contour with line!" + contours.length);
 			}
 			else if (random_entities[0].type == "arc")
 			{
+				find_chain = true;
 				var start_line = render.geometry.get_line_at_angle({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].startAngle, random_entities[0].radius);
 				var end_line = render.geometry.get_line_at_angle({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].endAngle, random_entities[0].radius);
 				current_path.push({x: start_line.end[0], y: start_line.end[1]});
+				console.log("(Entity Priming ) Start Angle: " + random_entities[0].startAngle + " End Angle: " + random_entities[0].endAngle);
 				current_path.push({x: end_line.end[0], y: end_line.end[1]});
-				random_entities.splice(x, 1);
+				random_entities.splice(0, 1);
 				//console.log("Priming contour with arc!" + contours.length);
 			}
-			while(get_next_contour_point(current_path) == true);
-			//If the end point and the start points are the same, we are a closed path
+			else if (random_entities[0].type == "circle")
+			{
+				find_chain = false; //Circles must always be a complete circle
+				//Explode this circle into verticies and add each point to current_path
+				var points_one = get_arc_points({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].radius, 0, 180);
+				for (var i = 0; i < points_one.length; i++)
+				{
+					current_path.push(points_one[i]);
+				}
+				var points_two = get_arc_points({x: random_entities[0].origin[0], y: random_entities[0].origin[1]}, random_entities[0].radius, 180, 360);
+				for (var i = 0; i < points_two.length; i++)
+				{
+					current_path.push(points_two[i]);
+				}
+				random_entities.splice(x, 1); //Delete this circle from the path
+			}
+			if (find_chain == true)
+			{
+				while(get_next_contour_point(current_path) == true);
+				//If the end point and the start points are the same, we are a closed path
+			}
 			if (current_path.length > 2)
 			{
 				contours.push(current_path);
@@ -359,11 +478,10 @@ function chainify_part(part_index)
 				//console.log("Emmitting path without any other points!");
 			}
 		}
-
 		/*
 			Render the contours to ensure the algorythim is working right
 		*/
-		render.Stack[part_index].hidden = true;
+		/*render.Stack[part_index].hidden = true;
 		render.Stack[part_index].updateRender = true;
 
 		for (var x = 0; x < contours.length; x++)
@@ -376,7 +494,7 @@ function chainify_part(part_index)
 			var part = render.newPart("chainify-" + x);
 			part.entities = imported_stack;
 			render.Stack.push(part);
-		}
+		}*/
 		return contours;
 	}
 }
