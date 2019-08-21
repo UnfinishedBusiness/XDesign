@@ -20,7 +20,7 @@ var mdi_commands = [
 	{ description: "Display command history", cmd: "history", run: function(args){ history(); } },
 	{ description: "Dump Serial Transmission Log", cmd: "dmesg", run: function(args){ dmesg(); } },
 	{ description: "Pipe serial transmisions to terminal", cmd: "tail", run: function(args){ tail(); } },
-	{ description: "Cancel prevous tail", cmd: "end_tail", run: function(args){ tail(); } },
+	{ description: "Cancel prevous tail", cmd: "end_tail", run: function(args){ end_tail(); } },
 	{ description: "Display this menu", cmd: "help", run: function(args){ help(); } },
 	{ special: true, cmd: "control-c", run: function(args){ printf("Terminating!\n"); } },
 	{ special: true, cmd: "tab-complete", run: function(args){ tab_complete(args); } },
@@ -147,7 +147,7 @@ var tail_interval;
 function tail(args)
 {
 	tail_interval = setInterval(function(){
-		if (SerialTransmissionLog.length > 0) printf(SerialTransmissionLog.pop());
+		if (SerialTransmissionLog.length > 0) printf(SerialTransmissionLog.pop() + "\n\r");
 	}, 150);
 }
 function end_tail()
