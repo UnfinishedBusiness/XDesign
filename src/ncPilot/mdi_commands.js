@@ -148,7 +148,7 @@ function tail(args)
 {
 	tail_interval = setInterval(function(){
 		if (SerialTransmissionLog.length > 0) printf(SerialTransmissionLog.pop() + "\n\r");
-	}, 150);
+	}, 50);
 }
 function end_tail()
 {
