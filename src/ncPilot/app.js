@@ -288,7 +288,7 @@ function CreateMenu()
 }
 function MotionController_Checksum(data)
 {
-	var buf = [];
+	/*var buf = [];
 	var buffer = new Buffer.from(data);
 	for (var i = 0; i < buffer.length; i++)
 	{
@@ -302,7 +302,8 @@ function MotionController_Checksum(data)
       checksum ^= buf[--count];
 			//console.log("XOR: " + checksum);
   }
-	return checksum;
+	return checksum;*/
+	return data.length;
 }
 function MotionController_ParseInput(line)
 {
