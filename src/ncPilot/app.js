@@ -193,6 +193,7 @@ function MotionController_Init()
 }
 function crc_write(buff)
 {
+	buff = buff.replace(/(\r\n\t|\n|\r\t)/gm,"");
 	var crc = MotionController_Checksum(buff);
 	MotionControlPort.write(buff + "*" + crc + "\n");
 	lastSerialWrite = buff; //This is resent and logged by read loop if it recieves a crc_fail
