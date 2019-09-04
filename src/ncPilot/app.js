@@ -13,6 +13,7 @@ var GcodeLines = [];
 var GcodeFileName = "";
 var WaitingForOkay = false;
 var MovesOnStack = 0;
+var thc_set_voltage = 0;
 const Interpreter = require('gcode-interpreter');
 
 const Workbench = "ncPilot";
@@ -32,7 +33,7 @@ function MDITerminal_Init()
 {
 	Terminal.applyAddon(fullscreen);
 	Terminal.applyAddon(webLinks);
-  Terminal.applyAddon(fit);
+  	Terminal.applyAddon(fit);
 	MDITerminal = new Terminal({
 		allowTransparency: true,
 		fontFamily: `'Fira Mono', monospace`,
@@ -193,6 +194,7 @@ function MotionController_Init()
 }
 function crc_write(buff)
 {
+	buff = buff.replace(/[^ -~]+/g, "");
 	var crc = MotionController_Checksum(buff);
 	MotionControlPort.write(buff + "*" + crc + "\n");
 	lastSerialWrite = buff; //This is resent and logged by read loop if it recieves a crc_fail
@@ -366,6 +368,7 @@ function MotionController_ParseInput(line)
 			}
 			if (key == "THC_SET_VOLTAGE")
 			{
+				thc_set_voltage = parseFloat(value).toFixed(1);
 				$("#SET_VOLTAGE").html(parseFloat(value).toFixed(1) + "V");
 			}
 			if (key == "THC_ARC_VOLTAGE")
@@ -760,6 +763,16 @@ function ProgramAbort()
 	MotionControllerStack = [];
 	WaitingForOkay = false;
 	crc_write("soft_abort");
+}
+function THC_Minus()
+{
+	thc_set_voltage -= 5;
+	crc_write("set_voltage " + thc_set_voltage);
+}
+function THC_Plus()
+{
+	thc_set_voltage += 5;
+	crc_write("set_voltage " + thc_set_voltage);
 }
 function animate()
 {
