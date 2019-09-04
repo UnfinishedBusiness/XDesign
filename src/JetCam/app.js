@@ -10,6 +10,7 @@ const simplify = require("simplify-js");
 let navigation;
 let fonts;
 let render = new ProfileRender();
+let part_tree = new PartTree();
 
 const Workbench = "JetCam";
 var CurrentFile = null;
@@ -214,66 +215,6 @@ function CreateMenu()
 }));
  appendWorkbenchMenu(menu);
 	Menu.setApplicationMenu(menu);
-}
-function build_tree()
-{
-	$("#parts_tree").bind('ready.jstree', function(event, data) {
-		var $tree = $(this);
-		$($tree.jstree().get_json($tree, {
-			flat: true
-		  }))
-		  .each(function(index, value) {
-			var node = $("#parts_tree").jstree().get_node(this.id);
-			var lvl = node.parents.length;
-			var idx = index;
-			//console.log('node index = ' + idx + ' level = ' + lvl);
-			//console.log(node);
-			$("#" + node.id).css({ color: "#9CA4B4"});
-		  });
-	});
-	$('#parts_tree').jstree({
-		'core' : {
-			'check_callback': true,
-			'data': [],
-			"themes" : {
-				"dots" : false, // no connecting dots between dots
-				"icons" : false,
-			  }
-		},
-        'checkbox': {
-            three_state: false,
-            cascade: 'up'
-		},
-        'plugins': ["checkbox"]
-	});
-}
-function add_part(name, state)
-{
-	name = name.replace(/ /g,"_");
-	var parent = '#';
-	var node = { id:name,text:name, "state": { "selected": state }};
-	$('#parts_tree').jstree().create_node(parent, node, 'last');
-}
-function delete_part(name)
-{
-	name = name.replace(/ /g,"_");
-	$('#parts_tree').jstree().delete_node("#" + name);
-}
-function style_tree()
-{
-	var tree_data = $("#parts_tree").jstree().get_json();
-	for (var x = 0; x < tree_data.length; x++)
-	{
-		//console.log(tree_data[x]);
-		$("#" + tree_data[x].id).css({color: "#9CA4B4"});
-		if (tree_data[x].children.length > 0)
-		{
-			for (var y = 0; y < tree_data[x].children.length; y++)
-			{
-				$("#" + tree_data[x].children[y].id).css({color: "#9CA4B4"});
-			}
-		}
-	}
 }
 function offset_contours(contours, distance, smoothing)
 {
@@ -501,7 +442,7 @@ function chainify_part(part_index)
 function main()
 {
 	CreateMenu();
-	build_tree();
+	part_tree.init("part_tree");
 	//render._renderHeight = window.innerHeight - 50;
 	render._renderWidth = window.innerWidth - 200;
 	//render._renderTopMargin = 50;
@@ -549,6 +490,3 @@ function main()
 $( document ).ready(function() {
     main();
 });
-setInterval(function(){
-	style_tree();
-}, 100);
