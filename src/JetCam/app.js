@@ -16,6 +16,7 @@ const Workbench = "JetCam";
 var CurrentFile = null;
 
 var job_options = { material_size: { width: 48, height: 96 } };
+var global_working_variables = { selected_part: null };
 
 function ParseDXF(data, part_name)
 {
@@ -468,28 +469,58 @@ function main()
 	plane.position.set(45/2, 45/2, 0);
 	render.scene.add( plane );*/
 	animate();
-	//render.mouse_over_check = function() {};
-	render.mouse_click_check = function() {};
-	render.mouse_drag_check = function(drag)
-	{
-		//console.log(drag);
-		var part_to_move = 1000;
+	render.mouse_over_check = function() {};
+	render.mouse_click_check = function(pos) {
+		//console.log(pos);
 		for (var x = 0; x < render.Stack.length; x++)
       	{
 			var part = render.Stack[x];
-			if (part.hidden == false)
+			if (part.hidden == false && part.internal == false)
 			{
+				var extents = {xmin: 1000000, xmax: -1000000, ymin: 1000000, ymax: -1000000};
 				for (var y = 0; y < part.entities.length; y++)
 				{
 					var entity = part.entities[y];
-					if (entity.meta.mouse_over == true)
+					if (entity.type == "line")
 					{
-						part_to_move = x;
+						if (entity.origin[0] < extents.xmin) extents.xmin = entity.origin[0];
+						if (entity.origin[0] > extents.xmax) extents.xmax = entity.origin[0];
+						if (entity.origin[1] < extents.ymin) extents.ymin = entity.origin[1];
+						if (entity.origin[1] > extents.ymax) extents.ymax = entity.origin[1];
+
+						if (entity.end[0] < extents.xmin) extents.xmin = entity.end[0];
+						if (entity.end[0] > extents.xmax) extents.xmax = entity.end[0];
+						if (entity.end[1] < extents.ymin) extents.ymin = entity.end[1];
+						if (entity.end[1] > extents.ymax) extents.ymax = entity.end[1];
 					}
+					if (entity.type == "circle")
+					{
+						if (entity.origin[0] < extents.xmin) extents.xmin = entity.origin[0];
+						if (entity.origin[0] > extents.xmax) extents.xmax = entity.origin[0];
+						if (entity.origin[1] < extents.ymin) extents.ymin = entity.origin[1];
+						if (entity.origin[1] > extents.ymax) extents.ymax = entity.origin[1];
+						
+						if (entity.origin[0] + entity.radius < extents.xmin) extents.xmin = entity.origin[0] + entity.radius;
+						if (entity.origin[0] + entity.radius > extents.xmax) extents.xmax = entity.origin[0] + entity.radius;
+						if (entity.origin[1] + entity.radius < extents.ymin) extents.ymin = entity.origin[1] + entity.radius;
+						if (entity.origin[1] + entity.radius > extents.ymax) extents.ymax = entity.origin[1] + entity.radius;
+					}
+				}
+				//console.log(extents);
+				if (pos.x - render.Stack[x].offset[0] > extents.xmin && pos.x - render.Stack[x].offset[0] < extents.xmax && pos.y - render.Stack[x].offset[1] > extents.ymin && pos.y - render.Stack[x].offset[1] < extents.ymax)
+				{
+					//console.log("Clicked on part " + x);
+					global_working_variables.selected_part = x;
 				}
 			}
 		}
-		if (part_to_move < 1000 && part_to_move < render.Stack.length)
+	};
+	render.mouse_drag_check = function(drag)
+	{
+		//console.log(drag);
+		if (global_working_variables.selected_part == null) return;
+		var part_to_move = global_working_variables.selected_part;
+		if (part_to_move < render.Stack.length)
 		{
 			render.Stack[part_to_move].offset[0] += drag.relative.x;
 			render.Stack[part_to_move].offset[1] += drag.relative.y;

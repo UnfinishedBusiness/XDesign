@@ -51,6 +51,9 @@ PartTree{
 	color: grey;
 	cursor: pointer;
 }
+.part_text:hover{
+	background-color:#26363E;
+}
 .part_arrow{
 	color: grey;
 	margin-right: 10px;
