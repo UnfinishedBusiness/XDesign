@@ -40,7 +40,7 @@ function ParseDXF(data, part_name)
       }
       var part = render.newPart(part_name);
       part.entities = imported_stack;
-      render.Stack.push(part);
+	  render.Stack.push(part);
   }catch(err) {
       return console.error(err.stack);
   }
@@ -146,7 +146,11 @@ function ImportDrawing()
 								var filepath = item;
 								var name = path.parse(filepath).name;
 								ParseDXF(data, name);
-								add_part(name, true);
+								part_tree.add_parent_part(name, {
+									parent_lightbulb_toggle: function() { 
+										render.togglePartVisibility(name);
+									},
+								});
 							});
 						}
 					});
@@ -422,7 +426,8 @@ function chainify_part(part_index)
 		/*
 			Render the contours to ensure the algorythim is working right
 		*/
-		/*render.Stack[part_index].hidden = true;
+		/*
+		render.Stack[part_index].hidden = true;
 		render.Stack[part_index].updateRender = true;
 
 		for (var x = 0; x < contours.length; x++)
@@ -457,6 +462,11 @@ function main()
 	job_material.entities.push({ type: "line", origin: [job_options.material_size.width, job_options.material_size.height], end: [0, job_options.material_size.height], meta: render.copy_obj(border_meta)});
 	job_material.entities.push({ type: "line", origin: [0, job_options.material_size.height], end: [0, 0], meta: render.copy_obj(border_meta)});
 	render.Stack.push(job_material);
+	/*var geometry = new THREE.PlaneGeometry( 45, 45, 32 );
+	var material = new THREE.MeshBasicMaterial( {color: 0x800000, side: THREE.DoubleSide} );
+	var plane = new THREE.Mesh( geometry, material );
+	plane.position.set(45/2, 45/2, 0);
+	render.scene.add( plane );*/
 	animate();
 	//render.mouse_over_check = function() {};
 	render.mouse_click_check = function() {};
