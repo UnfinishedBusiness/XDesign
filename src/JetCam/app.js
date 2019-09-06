@@ -447,8 +447,74 @@ function chainify_part(part_index)
 }
 var key_handler = {};
 key_handler.onkeyDown = function(e)
-{
-	console.log(e);
+{	
+	//console.log(e);
+	if (e.code == "Comma")
+	{
+		/* Counter-Clockwise rotatation */
+		var rotate_inc = -2;
+		var part_to_move = global_working_variables.selected_part;
+		var extents = render.geometry.GetPartExtents(render.Stack[part_to_move]);
+		var entities = render.Stack[part_to_move].entities;
+		var rotation_origin = render.geometry.midpoint({x: extents.xmin, y: extents.ymin}, {x: extents.xmax, y: extents.ymax});
+		for (var x = 0; x < entities.length; x++)
+		{
+			if (entities[x].type == "line")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+				var end = render.geometry.rotate_point({x: entities[x].end[0], y: entities[x].end[1]}, rotation_origin, rotate_inc);
+				entities[x].end = [end.x, end.y];
+			}
+			else if (entities[x].type == "arc")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+
+				entities[x].startAngle -= rotate_inc;
+				entities[x].endAngle -= rotate_inc;
+			}
+			else if (entities[x].type == "circle")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+			}
+		}
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "Period")
+	{
+		/* Clockwise rotation */
+		var rotate_inc = +2;
+		var part_to_move = global_working_variables.selected_part;
+		var extents = render.geometry.GetPartExtents(render.Stack[part_to_move]);
+		var entities = render.Stack[part_to_move].entities;
+		var rotation_origin = render.geometry.midpoint({x: extents.xmin, y: extents.ymin}, {x: extents.xmax, y: extents.ymax});
+		for (var x = 0; x < entities.length; x++)
+		{
+			if (entities[x].type == "line")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+				var end = render.geometry.rotate_point({x: entities[x].end[0], y: entities[x].end[1]}, rotation_origin, rotate_inc);
+				entities[x].end = [end.x, end.y];
+			}
+			else if (entities[x].type == "arc")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+
+				entities[x].startAngle -= rotate_inc;
+				entities[x].endAngle -= rotate_inc;
+			}
+			else if (entities[x].type == "circle")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+			}
+		}
+		render.Stack[part_to_move].updateRender = true;
+	}
 }
 key_handler.onkeyUp = function(e)
 {
@@ -489,35 +555,7 @@ function main()
 			var part = render.Stack[x];
 			if (part.hidden == false && part.internal == false)
 			{
-				var extents = {xmin: 1000000, xmax: -1000000, ymin: 1000000, ymax: -1000000};
-				for (var y = 0; y < part.entities.length; y++)
-				{
-					var entity = part.entities[y];
-					if (entity.type == "line")
-					{
-						if (entity.origin[0] < extents.xmin) extents.xmin = entity.origin[0];
-						if (entity.origin[0] > extents.xmax) extents.xmax = entity.origin[0];
-						if (entity.origin[1] < extents.ymin) extents.ymin = entity.origin[1];
-						if (entity.origin[1] > extents.ymax) extents.ymax = entity.origin[1];
-
-						if (entity.end[0] < extents.xmin) extents.xmin = entity.end[0];
-						if (entity.end[0] > extents.xmax) extents.xmax = entity.end[0];
-						if (entity.end[1] < extents.ymin) extents.ymin = entity.end[1];
-						if (entity.end[1] > extents.ymax) extents.ymax = entity.end[1];
-					}
-					if (entity.type == "circle")
-					{
-						if (entity.origin[0] < extents.xmin) extents.xmin = entity.origin[0];
-						if (entity.origin[0] > extents.xmax) extents.xmax = entity.origin[0];
-						if (entity.origin[1] < extents.ymin) extents.ymin = entity.origin[1];
-						if (entity.origin[1] > extents.ymax) extents.ymax = entity.origin[1];
-						
-						if (entity.origin[0] + entity.radius < extents.xmin) extents.xmin = entity.origin[0] + entity.radius;
-						if (entity.origin[0] + entity.radius > extents.xmax) extents.xmax = entity.origin[0] + entity.radius;
-						if (entity.origin[1] + entity.radius < extents.ymin) extents.ymin = entity.origin[1] + entity.radius;
-						if (entity.origin[1] + entity.radius > extents.ymax) extents.ymax = entity.origin[1] + entity.radius;
-					}
-				}
+				var extents = render.geometry.GetPartExtents(part);
 				//console.log(extents);
 				if (pos.x - render.Stack[x].offset[0] > extents.xmin && pos.x - render.Stack[x].offset[0] < extents.xmax && pos.y - render.Stack[x].offset[1] > extents.ymin && pos.y - render.Stack[x].offset[1] < extents.ymax)
 				{
@@ -534,9 +572,12 @@ function main()
 		var part_to_move = global_working_variables.selected_part;
 		if (part_to_move < render.Stack.length)
 		{
-			render.Stack[part_to_move].offset[0] += drag.relative.x;
-			render.Stack[part_to_move].offset[1] += drag.relative.y;
-			render.Stack[part_to_move].updateRender = true;
+			if (render.Stack[part_to_move].hidden == false)
+			{
+				render.Stack[part_to_move].offset[0] += drag.relative.x;
+				render.Stack[part_to_move].offset[1] += drag.relative.y;
+				render.Stack[part_to_move].updateRender = true;
+			}
 		}
 	};
 }
