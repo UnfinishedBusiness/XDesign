@@ -15,7 +15,7 @@ let part_tree = new PartTree();
 const Workbench = "JetCam";
 var CurrentFile = null;
 
-var job_options = { material_size: { width: 48, height: 96 } };
+var job_options = { material_size: { width: 45.5, height: 45.5 } };
 var global_working_variables = { selected_part: null };
 
 function ParseDXF(data, part_name)
@@ -445,6 +445,15 @@ function chainify_part(part_index)
 		return contours;
 	}
 }
+var key_handler = {};
+key_handler.onkeyDown = function(e)
+{
+	console.log(e);
+}
+key_handler.onkeyUp = function(e)
+{
+
+}
 function main()
 {
 	CreateMenu();
@@ -463,6 +472,9 @@ function main()
 	job_material.entities.push({ type: "line", origin: [job_options.material_size.width, job_options.material_size.height], end: [0, job_options.material_size.height], meta: render.copy_obj(border_meta)});
 	job_material.entities.push({ type: "line", origin: [0, job_options.material_size.height], end: [0, 0], meta: render.copy_obj(border_meta)});
 	render.Stack.push(job_material);
+
+	window.addEventListener("keydown", function(e){ key_handler.onkeyDown(e); });
+	window.addEventListener("keyup", function(e){ key_handler.onkeyUp(e); });
 	/*var geometry = new THREE.PlaneGeometry( 45, 45, 32 );
 	var material = new THREE.MeshBasicMaterial( {color: 0x800000, side: THREE.DoubleSide} );
 	var plane = new THREE.Mesh( geometry, material );
