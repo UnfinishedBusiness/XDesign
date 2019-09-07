@@ -16,7 +16,7 @@ const Workbench = "JetCam";
 var CurrentFile = null;
 
 var job_options = { material_size: { width: 45.5, height: 45.5 } };
-var global_working_variables = { selected_part: null };
+var global_working_variables = { selected_part: null, arrow_key_inc_amount: 0.0325 };
 
 function ParseDXF(data, part_name)
 {
@@ -513,6 +513,30 @@ key_handler.onkeyDown = function(e)
 				entities[x].origin = [new_origin.x, new_origin.y];
 			}
 		}
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowLeft")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[0] -= global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowRight")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[0] += global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowUp")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[1] += global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowDown")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[1] -= global_working_variables.arrow_key_inc_amount;
 		render.Stack[part_to_move].updateRender = true;
 	}
 }
