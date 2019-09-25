@@ -10,11 +10,13 @@ const simplify = require("simplify-js");
 let navigation;
 let fonts;
 let render = new ProfileRender();
+let part_tree = new PartTree();
 
 const Workbench = "JetCam";
 var CurrentFile = null;
 
-var job_options = { material_size: { width: 48, height: 96 } };
+var job_options = { material_size: { width: 45.5, height: 45.5 } };
+var global_working_variables = { selected_part: null, arrow_key_inc_amount: 0.0325 };
 
 function ParseDXF(data, part_name)
 {
@@ -39,7 +41,7 @@ function ParseDXF(data, part_name)
       }
       var part = render.newPart(part_name);
       part.entities = imported_stack;
-      render.Stack.push(part);
+	  render.Stack.push(part);
   }catch(err) {
       return console.error(err.stack);
   }
@@ -145,7 +147,11 @@ function ImportDrawing()
 								var filepath = item;
 								var name = path.parse(filepath).name;
 								ParseDXF(data, name);
-								add_part(name, true);
+								part_tree.add_parent_part(name, {
+									parent_lightbulb_toggle: function() { 
+										render.togglePartVisibility(name);
+									},
+								});
 							});
 						}
 					});
@@ -214,66 +220,6 @@ function CreateMenu()
 }));
  appendWorkbenchMenu(menu);
 	Menu.setApplicationMenu(menu);
-}
-function build_tree()
-{
-	$("#parts_tree").bind('ready.jstree', function(event, data) {
-		var $tree = $(this);
-		$($tree.jstree().get_json($tree, {
-			flat: true
-		  }))
-		  .each(function(index, value) {
-			var node = $("#parts_tree").jstree().get_node(this.id);
-			var lvl = node.parents.length;
-			var idx = index;
-			//console.log('node index = ' + idx + ' level = ' + lvl);
-			//console.log(node);
-			$("#" + node.id).css({ color: "#9CA4B4"});
-		  });
-	});
-	$('#parts_tree').jstree({
-		'core' : {
-			'check_callback': true,
-			'data': [],
-			"themes" : {
-				"dots" : false, // no connecting dots between dots
-				"icons" : false,
-			  }
-		},
-        'checkbox': {
-            three_state: false,
-            cascade: 'up'
-		},
-        'plugins': ["checkbox"]
-	});
-}
-function add_part(name, state)
-{
-	name = name.replace(/ /g,"_");
-	var parent = '#';
-	var node = { id:name,text:name, "state": { "selected": state }};
-	$('#parts_tree').jstree().create_node(parent, node, 'last');
-}
-function delete_part(name)
-{
-	name = name.replace(/ /g,"_");
-	$('#parts_tree').jstree().delete_node("#" + name);
-}
-function style_tree()
-{
-	var tree_data = $("#parts_tree").jstree().get_json();
-	for (var x = 0; x < tree_data.length; x++)
-	{
-		//console.log(tree_data[x]);
-		$("#" + tree_data[x].id).css({color: "#9CA4B4"});
-		if (tree_data[x].children.length > 0)
-		{
-			for (var y = 0; y < tree_data[x].children.length; y++)
-			{
-				$("#" + tree_data[x].children[y].id).css({color: "#9CA4B4"});
-			}
-		}
-	}
 }
 function offset_contours(contours, distance, smoothing)
 {
@@ -481,7 +427,8 @@ function chainify_part(part_index)
 		/*
 			Render the contours to ensure the algorythim is working right
 		*/
-		/*render.Stack[part_index].hidden = true;
+		/*
+		render.Stack[part_index].hidden = true;
 		render.Stack[part_index].updateRender = true;
 
 		for (var x = 0; x < contours.length; x++)
@@ -498,10 +445,109 @@ function chainify_part(part_index)
 		return contours;
 	}
 }
+var key_handler = {};
+key_handler.onkeyDown = function(e)
+{	
+	//console.log(e);
+	if (e.code == "Comma")
+	{
+		/* Counter-Clockwise rotatation */
+		var rotate_inc = -2;
+		var part_to_move = global_working_variables.selected_part;
+		var extents = render.geometry.GetPartExtents(render.Stack[part_to_move]);
+		var entities = render.Stack[part_to_move].entities;
+		var rotation_origin = render.geometry.midpoint({x: extents.xmin, y: extents.ymin}, {x: extents.xmax, y: extents.ymax});
+		for (var x = 0; x < entities.length; x++)
+		{
+			if (entities[x].type == "line")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+				var end = render.geometry.rotate_point({x: entities[x].end[0], y: entities[x].end[1]}, rotation_origin, rotate_inc);
+				entities[x].end = [end.x, end.y];
+			}
+			else if (entities[x].type == "arc")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+
+				entities[x].startAngle -= rotate_inc;
+				entities[x].endAngle -= rotate_inc;
+			}
+			else if (entities[x].type == "circle")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+			}
+		}
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "Period")
+	{
+		/* Clockwise rotation */
+		var rotate_inc = +2;
+		var part_to_move = global_working_variables.selected_part;
+		var extents = render.geometry.GetPartExtents(render.Stack[part_to_move]);
+		var entities = render.Stack[part_to_move].entities;
+		var rotation_origin = render.geometry.midpoint({x: extents.xmin, y: extents.ymin}, {x: extents.xmax, y: extents.ymax});
+		for (var x = 0; x < entities.length; x++)
+		{
+			if (entities[x].type == "line")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+				var end = render.geometry.rotate_point({x: entities[x].end[0], y: entities[x].end[1]}, rotation_origin, rotate_inc);
+				entities[x].end = [end.x, end.y];
+			}
+			else if (entities[x].type == "arc")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+
+				entities[x].startAngle -= rotate_inc;
+				entities[x].endAngle -= rotate_inc;
+			}
+			else if (entities[x].type == "circle")
+			{
+				var new_origin = render.geometry.rotate_point({x: entities[x].origin[0], y: entities[x].origin[1]}, rotation_origin, rotate_inc);
+				entities[x].origin = [new_origin.x, new_origin.y];
+			}
+		}
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowLeft")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[0] -= global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowRight")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[0] += global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowUp")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[1] += global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+	else if (e.code == "ArrowDown")
+	{
+		var part_to_move = global_working_variables.selected_part;
+		render.Stack[part_to_move].offset[1] -= global_working_variables.arrow_key_inc_amount;
+		render.Stack[part_to_move].updateRender = true;
+	}
+}
+key_handler.onkeyUp = function(e)
+{
+
+}
 function main()
 {
 	CreateMenu();
-	build_tree();
+	part_tree.init("part_tree");
 	//render._renderHeight = window.innerHeight - 50;
 	render._renderWidth = window.innerWidth - 200;
 	//render._renderTopMargin = 50;
@@ -516,39 +562,49 @@ function main()
 	job_material.entities.push({ type: "line", origin: [job_options.material_size.width, job_options.material_size.height], end: [0, job_options.material_size.height], meta: render.copy_obj(border_meta)});
 	job_material.entities.push({ type: "line", origin: [0, job_options.material_size.height], end: [0, 0], meta: render.copy_obj(border_meta)});
 	render.Stack.push(job_material);
+
+	window.addEventListener("keydown", function(e){ key_handler.onkeyDown(e); });
+	window.addEventListener("keyup", function(e){ key_handler.onkeyUp(e); });
+	/*var geometry = new THREE.PlaneGeometry( 45, 45, 32 );
+	var material = new THREE.MeshBasicMaterial( {color: 0x800000, side: THREE.DoubleSide} );
+	var plane = new THREE.Mesh( geometry, material );
+	plane.position.set(45/2, 45/2, 0);
+	render.scene.add( plane );*/
 	animate();
-	//render.mouse_over_check = function() {};
-	render.mouse_click_check = function() {};
-	render.mouse_drag_check = function(drag)
-	{
-		//console.log(drag);
-		var part_to_move = 1000;
+	render.mouse_over_check = function() {};
+	render.mouse_click_check = function(pos) {
+		//console.log(pos);
 		for (var x = 0; x < render.Stack.length; x++)
       	{
 			var part = render.Stack[x];
-			if (part.hidden == false)
+			if (part.hidden == false && part.internal == false)
 			{
-				for (var y = 0; y < part.entities.length; y++)
+				var extents = render.geometry.GetPartExtents(part);
+				//console.log(extents);
+				if (pos.x - render.Stack[x].offset[0] > extents.xmin && pos.x - render.Stack[x].offset[0] < extents.xmax && pos.y - render.Stack[x].offset[1] > extents.ymin && pos.y - render.Stack[x].offset[1] < extents.ymax)
 				{
-					var entity = part.entities[y];
-					if (entity.meta.mouse_over == true)
-					{
-						part_to_move = x;
-					}
+					//console.log("Clicked on part " + x);
+					global_working_variables.selected_part = x;
 				}
 			}
 		}
-		if (part_to_move < 1000 && part_to_move < render.Stack.length)
+	};
+	render.mouse_drag_check = function(drag)
+	{
+		//console.log(drag);
+		if (global_working_variables.selected_part == null) return;
+		var part_to_move = global_working_variables.selected_part;
+		if (part_to_move < render.Stack.length)
 		{
-			render.Stack[part_to_move].offset[0] += drag.relative.x;
-			render.Stack[part_to_move].offset[1] += drag.relative.y;
-			render.Stack[part_to_move].updateRender = true;
+			if (render.Stack[part_to_move].hidden == false)
+			{
+				render.Stack[part_to_move].offset[0] += drag.relative.x;
+				render.Stack[part_to_move].offset[1] += drag.relative.y;
+				render.Stack[part_to_move].updateRender = true;
+			}
 		}
 	};
 }
 $( document ).ready(function() {
     main();
 });
-setInterval(function(){
-	style_tree();
-}, 100);

@@ -30,3 +30,42 @@ PartTree{
 	height: 300px;
 	width: 180px;
 }
+.tree_parent{
+	-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+	margin-top: 7px;
+}
+.tree_child_show{
+	margin-left: 40px;
+	display: block;
+}
+.tree_child_hide{
+	margin-left: 40px;
+	display: none;
+}
+.part_text{
+	color: grey;
+	cursor: pointer;
+}
+.part_text:hover{
+	background-color:#26363E;
+}
+.part_arrow{
+	color: grey;
+	margin-right: 10px;
+	cursor: pointer;
+}
+.part_lightbulb_on{
+	color: yellow;
+	margin-right: 15px;
+	cursor: pointer;
+}
+.part_lightbulb_off{
+	color: grey;
+	margin-right: 15px;
+	cursor: pointer;
+}
