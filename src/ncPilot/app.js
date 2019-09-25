@@ -29,6 +29,11 @@ var ProgramHoldFlag = false;
 var ProgramUploaded = false;
 var CurrentFocus = "HMI";
 
+function map(x, in_min, in_max, out_min, out_max)
+{
+ return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 function MDITerminal_Init()
 {
 	Terminal.applyAddon(fullscreen);
@@ -186,6 +191,7 @@ function MotionController_Init()
 						crc_write("set_scale 1 " + machine_parameters.machine_axis_scale.y);
 						crc_write("set_scale 2 " + machine_parameters.machine_axis_scale.z);
 						crc_write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup);
+						crc_write("set_thc_config " + machine_parameters.machine_thc_config.pin + " " + machine_parameters.machine_thc_config.filter + " " + machine_parameters.machine_thc_config.comp_vel + " " + machine_parameters.machine_thc_config.adc_at_zero + " " + machine_parameters.machine_thc_config.adc_at_one_hundred);
 					}
 				});
 			}
@@ -369,7 +375,7 @@ function MotionController_ParseInput(line)
 			if (key == "THC_SET_VOLTAGE")
 			{
 				thc_set_voltage = parseFloat(value).toFixed(1);
-				$("#SET_VOLTAGE").html(parseFloat(value).toFixed(1) + "V");
+				$("#SET_VOLTAGE").html(thc_set_voltage + "V");
 			}
 			if (key == "THC_ARC_VOLTAGE")
 			{
