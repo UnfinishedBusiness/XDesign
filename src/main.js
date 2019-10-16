@@ -21,7 +21,7 @@ function createWindow () {
   mainWindow.maximize();
   //mainWindow.toggleDevTools();
   // and load the index.html of the app.
-  mainWindow.loadFile('../layout/JetCad/JetCad.html')
+  mainWindow.loadFile('../layout/ncPilot/ncPilot.html')
 
   Menu.setApplicationMenu(null);
 

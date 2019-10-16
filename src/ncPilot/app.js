@@ -770,14 +770,24 @@ function ProgramAbort()
 	WaitingForOkay = false;
 	crc_write("soft_abort");
 }
-function THC_Minus()
+function ATHC_Minus()
 {
-	thc_set_voltage -= 5;
+	thc_set_voltage = Number(thc_set_voltage) - 5.0;
 	crc_write("set_voltage " + thc_set_voltage);
 }
-function THC_Plus()
+function ATHC_Plus()
 {
-	thc_set_voltage += 5;
+	thc_set_voltage = Number(thc_set_voltage) + 5.0;
+	crc_write("set_voltage " + thc_set_voltage);
+}
+function ATHC_Zero()
+{
+	thc_set_voltage = 0;
+	crc_write("set_voltage " + thc_set_voltage);
+}
+function ATHC_Hundred()
+{
+	thc_set_voltage = 100;
 	crc_write("set_voltage " + thc_set_voltage);
 }
 function animate()
