@@ -190,7 +190,7 @@ function MotionController_Init()
 						crc_write("set_scale 0 " + machine_parameters.machine_axis_scale.x);
 						crc_write("set_scale 1 " + machine_parameters.machine_axis_scale.y);
 						crc_write("set_scale 2 " + machine_parameters.machine_axis_scale.z);
-						crc_write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup);
+						crc_write("set_torch " + machine_parameters.machine_torch_config.z_rapid_feed + " " + machine_parameters.machine_torch_config.z_probe_feed + " " + machine_parameters.machine_torch_config.floating_head_takeup + " " + machine_parameters.machine_torch_config.clearance_height);
 						crc_write("set_thc_config " + machine_parameters.machine_thc_config.pin + " " + machine_parameters.machine_thc_config.filter + " " + machine_parameters.machine_thc_config.comp_vel + " " + machine_parameters.machine_thc_config.adc_at_zero + " " + machine_parameters.machine_thc_config.adc_at_one_hundred);
 					}
 				});
