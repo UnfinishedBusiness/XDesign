@@ -22,7 +22,7 @@
     "dxf-parser": "^1.0.0-alpha.1",
     "dxf-writer": "^1.2.0",
     "gcode-interpreter": "^2.1.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "makerjs": "^0.14.0",
     "potrace": "^2.1.2",
     "serialport": "^7.1.5",
